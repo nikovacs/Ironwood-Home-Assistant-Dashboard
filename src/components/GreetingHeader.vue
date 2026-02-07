@@ -17,23 +17,23 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <header class="px-5 pt-6 pb-2">
+  <header class="px-5 pt-8 pb-4">
     <div class="flex items-center justify-between">
       <!-- Left: time -->
       <div class="flex-1">
-        <span class="text-2xl font-light tabular-nums text-text-primary">{{ timeString }}</span>
+        <span class="text-3xl font-light tabular-nums text-text-primary">{{ timeString }}</span>
       </div>
 
       <!-- Center: greeting + date -->
       <div class="text-center">
-        <h1 class="text-xl font-semibold text-text-primary">{{ greeting }}</h1>
-        <p class="mt-0.5 text-xs text-text-secondary">{{ dateString }}</p>
+        <h1 class="text-2xl font-semibold text-text-primary">{{ greeting }}</h1>
+        <p class="mt-1 text-sm text-text-secondary">{{ dateString }}</p>
       </div>
 
       <!-- Right: weather -->
-      <div class="flex-1 flex items-center justify-end gap-1.5">
-        <span class="text-base">{{ weatherIcon }}</span>
-        <span class="text-sm font-medium text-text-primary">{{ weatherTemp }}</span>
+      <div class="flex-1 flex items-center justify-end gap-2">
+        <span class="text-3xl">{{ weatherIcon }}</span>
+        <span class="text-3xl font-light text-text-primary">{{ weatherTemp }}</span>
       </div>
     </div>
   </header>

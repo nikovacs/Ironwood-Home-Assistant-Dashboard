@@ -6,6 +6,7 @@ import LightingPanel from './components/panels/LightingPanel.vue'
 import AudioPanel from './components/panels/AudioPanel.vue'
 import AlarmPanel from './components/panels/AlarmPanel.vue'
 import CCTVPanel from './components/panels/CCTVPanel.vue'
+import AlertsPanel from './components/panels/AlertsPanel.vue'
 
 interface Category {
   id: string
@@ -18,6 +19,7 @@ const activeCategory = ref<string | null>(null)
 const isExpanded = computed<boolean>(() => activeCategory.value !== null)
 
 const categories: Category[] = [
+  { id: 'alerts',   icon: '🔔', label: 'Alerts',   color: 'alerts' },
   { id: 'lighting', icon: '💡', label: 'Lighting', color: 'lighting' },
   { id: 'audio',    icon: '🔊', label: 'Audio',    color: 'audio' },
   { id: 'alarm',    icon: '🛡️', label: 'Alarm',    color: 'alarm' },
@@ -29,6 +31,7 @@ function selectCategory(id: string): void {
 }
 
 const panelComponents: Record<string, Component> = {
+  alerts: AlertsPanel,
   lighting: LightingPanel,
   audio: AudioPanel,
   alarm: AlarmPanel,
@@ -83,7 +86,7 @@ const activePanel = computed<Component | undefined>(() =>
   flex: 1 1 auto;
   display: flex;
   align-items: start;
-  padding: 1rem 1.25rem 0.75rem;
+  padding: 1.5rem 2.5rem 1rem;
   transition: flex 800ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -99,7 +102,7 @@ const activePanel = computed<Component | undefined>(() =>
 .buttons-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 0.75rem;
+  gap: 1.5rem;
   width: 100%;
   transition: gap 800ms cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -116,17 +119,21 @@ const activePanel = computed<Component | undefined>(() =>
 /* Closing transition (compact → default): slower */
 .btn-cell {
   grid-column: span 2;
-  height: calc((100vw - 2.5rem - 0.75rem) / 2);
+  height: calc((100dvh - 8rem - 4rem - 4.5rem) / 4);
+  padding: 0.5rem;
   transition:
-    height 1000ms cubic-bezier(0.4, 0, 0.2, 1);
+    height 1000ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding 800ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Opening transition (default → compact): faster */
 .buttons-area.compact .btn-cell {
   grid-column: span 1;
   height: 5rem;
+  padding: 0.25rem;
   transition:
-    height 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    height 400ms cubic-bezier(0.4, 0, 0.2, 1),
+    padding 400ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-cell > * {

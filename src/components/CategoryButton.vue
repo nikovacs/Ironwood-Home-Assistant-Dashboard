@@ -24,6 +24,7 @@ interface ColorSet {
 }
 
 const colorMap: Record<string, ColorSet> = {
+  alerts:   { icon: 'text-cat-alerts',   bg: 'bg-cat-alerts-soft',   border: 'border-cat-alerts' },
   lighting: { icon: 'text-cat-lighting', bg: 'bg-cat-lighting-soft', border: 'border-cat-lighting' },
   audio:    { icon: 'text-cat-audio',    bg: 'bg-cat-audio-soft',    border: 'border-cat-audio' },
   alarm:    { icon: 'text-cat-alarm',    bg: 'bg-cat-alarm-soft',    border: 'border-cat-alarm' },

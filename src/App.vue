@@ -2,6 +2,7 @@
 import { ref, computed, type Component } from 'vue'
 import GreetingHeader from './components/GreetingHeader.vue'
 import CategoryButton from './components/CategoryButton.vue'
+import CriticalBanner from './components/CriticalBanner.vue'
 import LightingPanel from './components/panels/LightingPanel.vue'
 import AudioPanel from './components/panels/AudioPanel.vue'
 import AlarmPanel from './components/panels/AlarmPanel.vue'
@@ -45,6 +46,9 @@ const activePanel = computed<Component | undefined>(() =>
 <template>
   <div class="flex min-h-[100dvh] flex-col bg-surface-primary">
     <GreetingHeader />
+
+    <!-- Critical alert banner -->
+    <CriticalBanner />
 
     <!-- Category buttons — height shrinks when panel is open -->
     <div class="buttons-area" :class="{ compact: isExpanded }">

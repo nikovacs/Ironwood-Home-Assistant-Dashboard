@@ -41,51 +41,115 @@ const activePanel = computed<Component | undefined>(() =>
 
 <template>
   <div class="flex min-h-[100dvh] flex-col bg-surface-primary">
-    <!-- Greeting header -->
     <GreetingHeader />
 
-    <!-- Category buttons -->
-    <div
-      class="px-5 transition-all duration-500 ease-out"
-      :class="isExpanded ? 'pb-3' : 'flex-1 flex items-start pt-4'"
-    >
-      <!-- 2-column grid (collapsed) → single row (expanded) -->
-      <div
-        class="w-full transition-all duration-500 ease-out"
-        :class="isExpanded
-          ? 'grid grid-cols-4 gap-2'
-          : 'grid grid-cols-2 gap-3'"
-      >
-        <CategoryButton
-          v-for="cat in categories"
-          :key="cat.id"
-          :icon="cat.icon"
-          :label="cat.label"
-          :color="cat.color"
-          :active="activeCategory === cat.id"
-          :compact="isExpanded"
-          @select="selectCategory(cat.id)"
-        />
+    <!-- Category buttons — height shrinks when panel is open -->
+    <div class="buttons-area" :class="{ compact: isExpanded }">
+      <div class="buttons-row">
+        <div v-for="cat in categories" :key="cat.id" class="btn-cell">
+          <CategoryButton
+            :icon="cat.icon"
+            :label="cat.label"
+            :color="cat.color"
+            :active="activeCategory === cat.id"
+            :compact="isExpanded"
+            @select="selectCategory(cat.id)"
+          />
+        </div>
       </div>
     </div>
 
-    <!-- Expanded panel -->
-    <Transition
-      enter-active-class="transition-all duration-500 ease-out"
-      enter-from-class="opacity-0 translate-y-8"
-      enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition-all duration-300 ease-in"
-      leave-from-class="opacity-100 translate-y-0"
-      leave-to-class="opacity-0 translate-y-8"
-      mode="out-in"
+    <!-- Panel — grows to fill remaining space -->
+    <div
+      class="panel-area rounded-t-3xl border-t bg-surface-panel"
+      :class="isExpanded ? 'is-open border-border-subtle' : 'border-transparent'"
     >
-      <div
-        v-if="isExpanded"
-        :key="activeCategory"
-        class="flex-1 overflow-y-auto rounded-t-3xl border-t border-border-subtle bg-surface-panel px-5 pt-5 pb-8"
-      >
-        <component :is="activePanel" />
+      <div class="overflow-y-auto px-5 pt-5 pb-8 h-full">
+        <KeepAlive>
+          <component :is="activePanel" :key="activeCategory" />
+        </KeepAlive>
       </div>
-    </Transition>
+    </div>
   </div>
 </template>
+
+<style scoped>
+/*
+  Button area: takes up most of the screen by default,
+  shrinks to a small strip when the panel opens.
+  We use flex-basis + max-height (both animatable).
+*/
+.buttons-area {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: start;
+  padding: 1rem 1.25rem 0.75rem;
+  transition: flex 800ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.buttons-area.compact {
+  flex: 0 0 auto;
+}
+
+/*
+  The button grid. Always 4 columns.
+  Default: 2 rows, buttons span 2 cols each → 2×2 look.
+  Compact: 1 row, buttons span 1 col each → 1×4.
+*/
+.buttons-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+  transition: gap 800ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.buttons-area.compact .buttons-row {
+  gap: 0.5rem;
+}
+
+/*
+  Each button cell.
+  Default: spans 2 columns, explicit height for square look.
+  Compact: spans 1 column, shorter height.
+*/
+/* Closing transition (compact → default): slower */
+.btn-cell {
+  grid-column: span 2;
+  height: calc((100vw - 2.5rem - 0.75rem) / 2);
+  transition:
+    height 1000ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Opening transition (default → compact): faster */
+.buttons-area.compact .btn-cell {
+  grid-column: span 1;
+  height: 5rem;
+  transition:
+    height 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-cell > * {
+  width: 100%;
+  height: 100%;
+}
+
+/*
+  Panel: hidden by default, slides up and grows.
+  Uses max-height for animatable open/close.
+*/
+.panel-area {
+  flex: 0 1 0px;
+  min-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    flex 800ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 600ms ease;
+}
+
+.panel-area.is-open {
+  flex: 1 1 0px;
+  opacity: 1;
+}
+</style>

@@ -36,19 +36,19 @@ const colors: ColorSet = colorMap[props.color] || colorMap.lighting
 <template>
   <button
     @click="$emit('select')"
-    class="relative flex items-center gap-3 rounded-2xl border px-4 py-4 transition-all duration-300 ease-out
+    class="relative flex flex-col items-center justify-center rounded-2xl border transition-all duration-300 ease-out
            active:scale-[0.97] cursor-pointer select-none"
     :class="[
       active
         ? [colors.bg, colors.border, 'shadow-sm']
         : 'bg-surface-card border-border-subtle hover:bg-surface-card-hover',
-      compact ? 'flex-col gap-1 px-3 py-3 justify-center' : ''
+      compact ? 'gap-1 p-2' : 'gap-2 p-4'
     ]"
   >
     <span
       class="transition-all duration-300"
       :class="[
-        compact ? 'text-2xl' : 'text-3xl',
+        compact ? 'text-2xl' : 'text-4xl',
         active ? colors.icon : 'text-text-secondary'
       ]"
     >

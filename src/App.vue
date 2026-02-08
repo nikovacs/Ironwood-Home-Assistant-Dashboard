@@ -112,9 +112,10 @@ const activePanel = computed<Component | undefined>(() =>
 }
 
 /*
-  The button grid. Always 4 columns.
-  Default: 2 rows, buttons span 2 cols each → 2×2 look.
-  Compact: 1 row, buttons span 1 col each → 1×4.
+  The button grid. Always 4 columns, never changes.
+  Default: taller cells in a 4×2 grid (4+3 with 7 buttons).
+  Compact: same grid, just shorter cells.
+  No column span changes = no layout jump.
 */
 .buttons-row {
   display: grid;
@@ -130,12 +131,12 @@ const activePanel = computed<Component | undefined>(() =>
 
 /*
   Each button cell.
-  Default: spans 2 columns, explicit height for square look.
-  Compact: spans 1 column, shorter height.
+  Default: explicit height for a tall square-ish look.
+  Compact: short strip.
+  Only height + padding animate — no reflow.
 */
 /* Closing transition (compact → default): slower */
 .btn-cell {
-  grid-column: span 2;
   height: calc((100dvh - 8rem - 4rem - 4.5rem) / 4);
   padding: 0.5rem;
   transition:
@@ -145,7 +146,6 @@ const activePanel = computed<Component | undefined>(() =>
 
 /* Opening transition (default → compact): faster */
 .buttons-area.compact .btn-cell {
-  grid-column: span 1;
   height: 5rem;
   padding: 0.25rem;
   transition:

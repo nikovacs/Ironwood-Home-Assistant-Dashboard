@@ -8,10 +8,15 @@ import AudioPanel from './components/panels/AudioPanel.vue'
 import AlarmPanel from './components/panels/AlarmPanel.vue'
 import CCTVPanel from './components/panels/CCTVPanel.vue'
 import AlertsPanel from './components/panels/AlertsPanel.vue'
+import IconBell from './components/icons/IconBell.vue'
+import IconLightbulb from './components/icons/IconLightbulb.vue'
+import IconSpeaker from './components/icons/IconSpeaker.vue'
+import IconShield from './components/icons/IconShield.vue'
+import IconCamera from './components/icons/IconCamera.vue'
 
 interface Category {
   id: string
-  icon: string
+  icon: Component
   label: string
   color: string
 }
@@ -20,11 +25,11 @@ const activeCategory = ref<string | null>(null)
 const isExpanded = computed<boolean>(() => activeCategory.value !== null)
 
 const categories: Category[] = [
-  { id: 'alerts',   icon: '🔔', label: 'Alerts',   color: 'alerts' },
-  { id: 'lighting', icon: '💡', label: 'Lighting', color: 'lighting' },
-  { id: 'audio',    icon: '🔊', label: 'Audio',    color: 'audio' },
-  { id: 'alarm',    icon: '🛡️', label: 'Alarm',    color: 'alarm' },
-  { id: 'cctv',     icon: '📹', label: 'CCTV',     color: 'cctv' },
+  { id: 'alerts',   icon: IconBell,      label: 'Alerts',   color: 'alerts' },
+  { id: 'lighting', icon: IconLightbulb, label: 'Lighting', color: 'lighting' },
+  { id: 'audio',    icon: IconSpeaker,   label: 'Audio',    color: 'audio' },
+  { id: 'alarm',    icon: IconShield,    label: 'Alarm',    color: 'alarm' },
+  { id: 'cctv',     icon: IconCamera,    label: 'CCTV',     color: 'cctv' },
 ]
 
 function selectCategory(id: string): void {

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import IconAlertCircle from './icons/IconAlertCircle.vue'
+import IconX from './icons/IconX.vue'
 
 interface Props {
   message?: string
@@ -27,14 +29,14 @@ function handleDismiss(emit: (_e: 'dismiss') => void): void {
       v-if="visible"
       class="mx-5 mb-2 flex items-center gap-3 rounded-xl border border-cat-alarm bg-cat-alarm-soft px-4 py-3"
     >
-      <span class="text-lg">🚨</span>
+      <IconAlertCircle class="h-5 w-5 text-cat-alarm" />
       <p class="flex-1 text-sm font-semibold text-cat-alarm">{{ message }}</p>
       <button
         class="ml-2 text-cat-alarm opacity-60 hover:opacity-100 transition-opacity cursor-pointer text-lg leading-none"
         aria-label="Dismiss"
         @click="handleDismiss($emit)"
       >
-        ✕
+        <IconX class="h-4 w-4" />
       </button>
     </div>
   </Transition>

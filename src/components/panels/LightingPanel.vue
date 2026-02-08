@@ -1,20 +1,26 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, type Component } from 'vue'
+import IconSofa from '../icons/IconSofa.vue'
+import IconChefHat from '../icons/IconChefHat.vue'
+import IconBed from '../icons/IconBed.vue'
+import IconMonitor from '../icons/IconMonitor.vue'
+import IconShower from '../icons/IconShower.vue'
+import IconDoor from '../icons/IconDoor.vue'
 
 interface Room {
   name: string
-  icon: string
+  icon: Component
   brightness: number
   on: boolean
 }
 
 const rooms = ref<Room[]>([
-  { name: 'Living Room', icon: '🛋️', brightness: 80, on: true },
-  { name: 'Kitchen', icon: '🍳', brightness: 100, on: true },
-  { name: 'Bedroom', icon: '🛏️', brightness: 40, on: false },
-  { name: 'Office', icon: '💻', brightness: 70, on: true },
-  { name: 'Bathroom', icon: '🚿', brightness: 60, on: false },
-  { name: 'Hallway', icon: '🚪', brightness: 30, on: true },
+  { name: 'Living Room', icon: IconSofa, brightness: 80, on: true },
+  { name: 'Kitchen', icon: IconChefHat, brightness: 100, on: true },
+  { name: 'Bedroom', icon: IconBed, brightness: 40, on: false },
+  { name: 'Office', icon: IconMonitor, brightness: 70, on: true },
+  { name: 'Bathroom', icon: IconShower, brightness: 60, on: false },
+  { name: 'Hallway', icon: IconDoor, brightness: 30, on: true },
 ])
 
 function toggleRoom(room: Room): void {
@@ -40,7 +46,7 @@ function toggleRoom(room: Room): void {
         @click="toggleRoom(room)"
       >
         <div class="flex w-full items-center justify-between">
-          <span class="text-2xl">{{ room.icon }}</span>
+          <component :is="room.icon" class="h-6 w-6" />
           <div
             class="h-3 w-3 rounded-full transition-colors duration-200"
             :class="room.on ? 'bg-cat-lighting' : 'bg-border-subtle'"

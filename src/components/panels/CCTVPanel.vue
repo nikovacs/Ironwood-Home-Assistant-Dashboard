@@ -1,19 +1,24 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, type Component } from 'vue'
+import IconDoor from '../icons/IconDoor.vue'
+import IconTree from '../icons/IconTree.vue'
+import IconCar from '../icons/IconCar.vue'
+import IconRoad from '../icons/IconRoad.vue'
+import IconCamera from '../icons/IconCamera.vue'
 
 interface Camera {
   id: number
   name: string
-  icon: string
+  icon: Component
   status: 'online' | 'offline'
   lastMotion: string
 }
 
 const cameras = ref<Camera[]>([
-  { id: 1, name: 'Front Door', icon: '🚪', status: 'online', lastMotion: '3m ago' },
-  { id: 2, name: 'Backyard', icon: '🌳', status: 'online', lastMotion: '12m ago' },
-  { id: 3, name: 'Garage', icon: '🚗', status: 'online', lastMotion: '1h ago' },
-  { id: 4, name: 'Driveway', icon: '🛣️', status: 'offline', lastMotion: '—' },
+  { id: 1, name: 'Front Door', icon: IconDoor, status: 'online', lastMotion: '3m ago' },
+  { id: 2, name: 'Backyard', icon: IconTree, status: 'online', lastMotion: '12m ago' },
+  { id: 3, name: 'Garage', icon: IconCar, status: 'online', lastMotion: '1h ago' },
+  { id: 4, name: 'Driveway', icon: IconRoad, status: 'offline', lastMotion: '—' },
 ])
 
 const selectedCamera = ref<Camera | null>(null)
@@ -38,7 +43,7 @@ function selectCamera(cam: Camera): void {
       class="relative aspect-video rounded-2xl border border-border-subtle bg-gray-900 flex items-center justify-center overflow-hidden"
     >
       <div class="text-center">
-        <span class="text-4xl block mb-2">📹</span>
+        <IconCamera class="h-10 w-10 text-gray-400" />
         <p class="text-sm text-gray-400">{{ selectedCamera.name }}</p>
         <p class="text-xs text-gray-500 mt-1">Live feed placeholder</p>
       </div>
@@ -63,7 +68,7 @@ function selectCamera(cam: Camera): void {
         @click="selectCamera(cam)"
       >
         <div class="flex w-full items-center justify-between">
-          <span class="text-2xl">{{ cam.icon }}</span>
+          <component :is="cam.icon" class="h-6 w-6" />
           <div
             class="h-2.5 w-2.5 rounded-full"
             :class="cam.status === 'online' ? 'bg-green-500' : 'bg-red-400'"

@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, type Component } from 'vue'
+import IconUnlock from '../icons/IconUnlock.vue'
+import IconHome from '../icons/IconHome.vue'
+import IconLock from '../icons/IconLock.vue'
+import IconDoor from '../icons/IconDoor.vue'
+import IconWindow from '../icons/IconWindow.vue'
 
 type AlarmStatus = 'disarmed' | 'armed-home' | 'armed-away'
 
 interface AlarmMode {
   id: AlarmStatus
   label: string
-  icon: string
+  icon: Component
   description: string
 }
 
@@ -14,9 +19,9 @@ const status = ref<AlarmStatus>('disarmed')
 const entryCode = ref<string>('')
 
 const modes: AlarmMode[] = [
-  { id: 'disarmed', label: 'Disarmed', icon: '🔓', description: 'System off' },
-  { id: 'armed-home', label: 'Home', icon: '🏠', description: 'Perimeter only' },
-  { id: 'armed-away', label: 'Away', icon: '🔒', description: 'Full protection' },
+  { id: 'disarmed', label: 'Disarmed', icon: IconUnlock, description: 'System off' },
+  { id: 'armed-home', label: 'Home', icon: IconHome, description: 'Perimeter only' },
+  { id: 'armed-away', label: 'Away', icon: IconLock, description: 'Full protection' },
 ]
 
 const currentMode = computed<AlarmMode | undefined>(() => modes.find(m => m.id === status.value))
@@ -55,7 +60,7 @@ const isArmed = computed<boolean>(() => status.value !== 'disarmed')
           : 'bg-surface-card border-border-subtle'"
         @click="setMode(mode.id)"
       >
-        <span class="text-2xl">{{ mode.icon }}</span>
+        <component :is="mode.icon" class="h-7 w-7" />
         <div class="text-center">
           <p class="text-sm font-medium text-text-primary">{{ mode.label }}</p>
           <p class="text-xs text-text-secondary">{{ mode.description }}</p>
@@ -68,17 +73,17 @@ const isArmed = computed<boolean>(() => status.value !== 'disarmed')
       <p class="text-xs text-text-muted uppercase tracking-wide mb-2">Recent Activity</p>
       <div class="space-y-2">
         <div class="flex items-center gap-3 rounded-xl bg-surface-card border border-border-subtle px-3 py-2.5">
-          <span class="text-sm">🚪</span>
+          <IconDoor class="h-4 w-4 text-text-secondary" />
           <span class="flex-1 text-sm text-text-primary">Front door opened</span>
           <span class="text-xs text-text-muted">2m ago</span>
         </div>
         <div class="flex items-center gap-3 rounded-xl bg-surface-card border border-border-subtle px-3 py-2.5">
-          <span class="text-sm">🪟</span>
+          <IconWindow class="h-4 w-4 text-text-secondary" />
           <span class="flex-1 text-sm text-text-primary">Window sensor OK</span>
           <span class="text-xs text-text-muted">15m ago</span>
         </div>
         <div class="flex items-center gap-3 rounded-xl bg-surface-card border border-border-subtle px-3 py-2.5">
-          <span class="text-sm">🔒</span>
+          <IconLock class="h-4 w-4 text-text-secondary" />
           <span class="flex-1 text-sm text-text-primary">System armed (away)</span>
           <span class="text-xs text-text-muted">1h ago</span>
         </div>

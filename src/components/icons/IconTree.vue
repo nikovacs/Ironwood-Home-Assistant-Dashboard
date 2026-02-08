@@ -1,0 +1,7 @@
+<template>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon">
+    <path d="M12 3 5 14h14Z" />
+    <path d="M12 8 7 17h10Z" />
+    <line x1="12" y1="22" x2="12" y2="17" />
+  </svg>
+</template>

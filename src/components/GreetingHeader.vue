@@ -1,15 +1,17 @@
 <script setup lang="ts">
+import type { Component } from 'vue'
 import { useGreeting } from '../composables/useGreeting'
 import { useTheme } from '../composables/useTheme'
+import IconCloudSun from './icons/IconCloudSun.vue'
 
 interface Props {
   weatherTemp?: string
-  weatherIcon?: string
+  weatherIcon?: Component
 }
 
 withDefaults(defineProps<Props>(), {
   weatherTemp: '72°',
-  weatherIcon: '⛅',
+  weatherIcon: () => IconCloudSun,
 })
 
 const { greeting, timeString, dateString } = useGreeting()
@@ -32,7 +34,7 @@ useTheme()
 
       <!-- Right: weather -->
       <div class="flex-1 flex items-center justify-end gap-2">
-        <span class="text-3xl">{{ weatherIcon }}</span>
+        <component :is="weatherIcon" class="h-8 w-8 text-text-primary" />
         <span class="text-3xl font-light text-text-primary">{{ weatherTemp }}</span>
       </div>
     </div>

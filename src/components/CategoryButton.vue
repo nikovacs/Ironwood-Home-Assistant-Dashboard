@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import type { Component } from 'vue'
+
 interface Props {
-  icon: string
+  icon: Component
   label: string
   color?: string
   active?: boolean
@@ -46,15 +48,14 @@ const colors: ColorSet = colorMap[props.color] || colorMap.lighting
     ]"
     @click="$emit('select')"
   >
-    <span
+    <component
+      :is="icon"
       class="transition-all duration-300"
       :class="[
-        compact ? 'text-2xl' : 'text-4xl',
+        compact ? 'w-6 h-6' : 'w-10 h-10',
         active ? colors.icon : 'text-text-secondary'
       ]"
-    >
-      {{ icon }}
-    </span>
+    />
     <span
       class="font-medium transition-all duration-300"
       :class="[

@@ -135,7 +135,7 @@ function onTouchEnd(): void {
     <!-- Favorites strip -->
     <Transition name="favorites">
       <div v-if="!isExpanded" class="favorites-strip">
-        <div class="flex justify-center gap-2 px-5 pt-3 pb-4 overflow-x-auto">
+        <div class="favorites-inner">
           <FavoriteButton
             v-for="fav in favorites"
             :key="fav.id"
@@ -165,10 +165,13 @@ function onTouchEnd(): void {
       </div>
     </div>
 
-    <!-- Bottom weather + clock card (idle state only, no transition) -->
+    <!-- Bottom weather + clock card (idle state only, hidden on mobile) -->
     <div v-if="showBottomCard" class="weather-card-area">
       <WeatherClockCard />
     </div>
+
+    <!-- Mobile scroll hint gradient (idle only) -->
+    <div v-if="!isExpanded" class="scroll-fade" />
 
     <!-- Panel — grows to fill remaining space -->
     <div
@@ -291,13 +294,27 @@ function onTouchEnd(): void {
   overflow: hidden;
 }
 
+.favorites-inner {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem 1rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.favorites-inner::-webkit-scrollbar {
+  display: none;
+}
+
 .favorites-enter-active,
 .favorites-leave-active {
   transition:
     max-height 400ms cubic-bezier(0.4, 0, 0.2, 1),
     opacity 300ms ease,
     transform 400ms cubic-bezier(0.4, 0, 0.2, 1);
-  max-height: 4rem;
+  max-height: 5rem;
 }
 
 .favorites-enter-from,
@@ -316,5 +333,58 @@ function onTouchEnd(): void {
   align-items: stretch;
   justify-content: stretch;
   padding: 0 2.5rem 1rem;
+}
+
+/*
+  Mobile responsive (phones, < 640px)
+*/
+/*
+  Mobile scroll hint — only visible on small screens
+*/
+.scroll-fade {
+  display: none;
+}
+
+@media (width < 40rem) {
+  .scroll-fade {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3rem;
+    background: linear-gradient(to bottom, transparent, var(--color-surface-primary));
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .buttons-area {
+    padding: 0.5rem 1rem 0.75rem;
+  }
+
+  .buttons-area.compact {
+    display: none;
+  }
+
+  .buttons-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .btn-cell {
+    padding: 0.25rem;
+  }
+
+  .favorites-inner {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem 1rem;
+    overflow-x: visible;
+  }
+
+  .weather-card-area {
+    display: none;
+  }
 }
 </style>

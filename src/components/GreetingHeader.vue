@@ -63,7 +63,7 @@ const forecast: ForecastDay[] = [
 
     <!-- Mini forecast -->
     <Transition name="forecast">
-      <div v-if="!hideExtras" class="mt-3 flex justify-center gap-6">
+      <div v-if="!hideExtras" class="forecast-mobile-hide mt-3 flex justify-center gap-6">
         <div
           v-for="day in forecast"
           :key="day.day"
@@ -126,5 +126,23 @@ const forecast: ForecastDay[] = [
 .forecast-leave-to {
   max-height: 0;
   opacity: 0;
+}
+
+@media (width < 40rem) {
+  .header-container {
+    padding: 1.25rem 1rem 0.75rem;
+  }
+
+  .header-container > div:first-child {
+    justify-content: center;
+  }
+
+  .header-slot {
+    display: none;
+  }
+
+  .forecast-mobile-hide {
+    display: none;
+  }
 }
 </style>

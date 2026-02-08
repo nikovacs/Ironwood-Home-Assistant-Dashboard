@@ -4,12 +4,14 @@ import type { Component } from 'vue'
 interface Props {
   icon: Component
   label: string
+  status?: string
   color?: string
   active?: boolean
   compact?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  status: '',
   color: 'accent',
   active: false,
   compact: false,
@@ -66,6 +68,12 @@ const colors: ColorSet = colorMap[props.color] || colorMap.lighting
       ]"
     >
       {{ label }}
+    </span>
+    <span
+      v-if="status && !compact"
+      class="w-full truncate text-center text-xs text-text-muted transition-opacity duration-300"
+    >
+      {{ status }}
     </span>
   </button>
 </template>

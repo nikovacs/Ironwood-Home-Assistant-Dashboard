@@ -3,10 +3,17 @@ import type { Component } from 'vue'
 import { useGreeting } from '../composables/useGreeting'
 import { useTheme } from '../composables/useTheme'
 import IconCloudSun from './icons/IconCloudSun.vue'
+import IconSun from './icons/IconSun.vue'
 
 interface Props {
   weatherTemp?: string
   weatherIcon?: Component
+}
+
+interface ForecastDay {
+  day: string
+  high: string
+  icon: Component
 }
 
 withDefaults(defineProps<Props>(), {
@@ -16,6 +23,13 @@ withDefaults(defineProps<Props>(), {
 
 const { greeting, timeString, dateString } = useGreeting()
 useTheme()
+
+const forecast: ForecastDay[] = [
+  { day: 'Today', high: '72°', icon: IconCloudSun },
+  { day: 'Mon',   high: '68°', icon: IconCloudSun },
+  { day: 'Tue',   high: '75°', icon: IconSun },
+  { day: 'Wed',   high: '70°', icon: IconCloudSun },
+]
 </script>
 
 <template>
@@ -36,6 +50,19 @@ useTheme()
       <div class="flex-1 flex items-center justify-end gap-2">
         <component :is="weatherIcon" class="h-8 w-8 text-text-primary" />
         <span class="text-3xl font-light text-text-primary">{{ weatherTemp }}</span>
+      </div>
+    </div>
+
+    <!-- Mini forecast -->
+    <div class="mt-3 flex justify-center gap-6">
+      <div
+        v-for="day in forecast"
+        :key="day.day"
+        class="flex flex-col items-center gap-1"
+      >
+        <span class="text-xs text-text-muted">{{ day.day }}</span>
+        <component :is="day.icon" class="h-4 w-4 text-text-secondary" />
+        <span class="text-xs font-medium tabular-nums text-text-secondary">{{ day.high }}</span>
       </div>
     </div>
   </header>

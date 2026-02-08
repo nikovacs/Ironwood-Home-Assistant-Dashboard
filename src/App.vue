@@ -17,25 +17,30 @@ import IconSpeaker from './components/icons/IconSpeaker.vue'
 import IconShield from './components/icons/IconShield.vue'
 import IconCamera from './components/icons/IconCamera.vue'
 import IconThermometer from './components/icons/IconThermometer.vue'
+import FavoriteButton from './components/FavoriteButton.vue'
+import IconLock from './components/icons/IconLock.vue'
+import IconCar from './components/icons/IconCar.vue'
+import IconFan from './components/icons/IconFan.vue'
 
 interface Category {
   id: string
   icon: Component
   label: string
   color: string
+  status: string
 }
 
 const activeCategory = ref<string | null>(null)
 const isExpanded = computed<boolean>(() => activeCategory.value !== null)
 
 const categories: Category[] = [
-  { id: 'alerts',   icon: IconBell,      label: 'Alerts',   color: 'alerts' },
-  { id: 'lighting', icon: IconLightbulb, label: 'Lighting', color: 'lighting' },
-  { id: 'buttons',  icon: IconTap,       label: 'Buttons',  color: 'buttons' },
-  { id: 'audio',    icon: IconSpeaker,   label: 'Audio',    color: 'audio' },
-  { id: 'alarm',    icon: IconShield,    label: 'Alarm',    color: 'alarm' },
-  { id: 'cctv',     icon: IconCamera,      label: 'CCTV',     color: 'cctv' },
-  { id: 'climate',  icon: IconThermometer, label: 'Climate',  color: 'climate' },
+  { id: 'alerts',   icon: IconBell,        label: 'Alerts',   color: 'alerts',   status: '2 active' },
+  { id: 'lighting', icon: IconLightbulb,   label: 'Lighting', color: 'lighting', status: '4/7 on' },
+  { id: 'buttons',  icon: IconTap,         label: 'Buttons',  color: 'buttons',  status: 'Away Mode' },
+  { id: 'audio',    icon: IconSpeaker,     label: 'Audio',    color: 'audio',    status: 'Playing' },
+  { id: 'alarm',    icon: IconShield,      label: 'Alarm',    color: 'alarm',    status: 'Armed Home' },
+  { id: 'cctv',     icon: IconCamera,      label: 'CCTV',     color: 'cctv',     status: '4/4 online' },
+  { id: 'climate',  icon: IconThermometer, label: 'Climate',  color: 'climate',  status: '72°F' },
 ]
 
 function selectCategory(id: string): void {
@@ -54,6 +59,24 @@ const panelComponents: Record<string, Component> = {
 const activePanel = computed<Component | undefined>(() =>
   activeCategory.value ? panelComponents[activeCategory.value] : undefined
 )
+
+interface Favorite {
+  id: string
+  icon: Component
+  label: string
+  active: boolean
+}
+
+const favorites = ref<Favorite[]>([
+  { id: 'porch',  icon: IconLightbulb, label: 'Front Porch', active: true },
+  { id: 'lock',   icon: IconLock,      label: 'Lock Door',   active: false },
+  { id: 'garage', icon: IconCar,       label: 'Garage',      active: false },
+  { id: 'fan',    icon: IconFan,       label: 'Fan',         active: true },
+])
+
+function toggleFavorite(fav: Favorite): void {
+  fav.active = !fav.active
+}
 </script>
 
 <template>
@@ -63,6 +86,18 @@ const activePanel = computed<Component | undefined>(() =>
     <!-- Critical alert banner -->
     <CriticalBanner />
 
+    <!-- Favorites strip -->
+    <div v-if="!isExpanded" class="flex justify-center gap-2 px-5 pt-3 overflow-x-auto">
+      <FavoriteButton
+        v-for="fav in favorites"
+        :key="fav.id"
+        :icon="fav.icon"
+        :label="fav.label"
+        :active="fav.active"
+        @press="toggleFavorite(fav)"
+      />
+    </div>
+
     <!-- Category buttons — height shrinks when panel is open -->
     <div class="buttons-area" :class="{ compact: isExpanded }">
       <div class="buttons-row">
@@ -70,6 +105,7 @@ const activePanel = computed<Component | undefined>(() =>
           <CategoryButton
             :icon="cat.icon"
             :label="cat.label"
+            :status="cat.status"
             :color="cat.color"
             :active="activeCategory === cat.id"
             :compact="isExpanded"
@@ -103,7 +139,7 @@ const activePanel = computed<Component | undefined>(() =>
   flex: 1 1 auto;
   display: flex;
   align-items: start;
-  padding: 1.5rem 2.5rem 1rem;
+  padding: 0.75rem 2.5rem 1rem;
   transition: flex 800ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 

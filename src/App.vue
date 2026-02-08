@@ -9,10 +9,10 @@ import AlarmPanel from './components/panels/AlarmPanel.vue'
 import CCTVPanel from './components/panels/CCTVPanel.vue'
 import AlertsPanel from './components/panels/AlertsPanel.vue'
 import ClimatePanel from './components/panels/ClimatePanel.vue'
-import ScenesPanel from './components/panels/ScenesPanel.vue'
+import ButtonsPanel from './components/panels/ButtonsPanel.vue'
 import IconBell from './components/icons/IconBell.vue'
 import IconLightbulb from './components/icons/IconLightbulb.vue'
-import IconWand from './components/icons/IconWand.vue'
+import IconTap from './components/icons/IconTap.vue'
 import IconSpeaker from './components/icons/IconSpeaker.vue'
 import IconShield from './components/icons/IconShield.vue'
 import IconCamera from './components/icons/IconCamera.vue'
@@ -31,7 +31,7 @@ const isExpanded = computed<boolean>(() => activeCategory.value !== null)
 const categories: Category[] = [
   { id: 'alerts',   icon: IconBell,      label: 'Alerts',   color: 'alerts' },
   { id: 'lighting', icon: IconLightbulb, label: 'Lighting', color: 'lighting' },
-  { id: 'scenes',   icon: IconWand,      label: 'Scenes',   color: 'scenes' },
+  { id: 'buttons',  icon: IconTap,       label: 'Buttons',  color: 'buttons' },
   { id: 'audio',    icon: IconSpeaker,   label: 'Audio',    color: 'audio' },
   { id: 'alarm',    icon: IconShield,    label: 'Alarm',    color: 'alarm' },
   { id: 'cctv',     icon: IconCamera,      label: 'CCTV',     color: 'cctv' },
@@ -49,7 +49,7 @@ const panelComponents: Record<string, Component> = {
   alarm: AlarmPanel,
   cctv: CCTVPanel,
   climate: ClimatePanel,
-  scenes: ScenesPanel,
+  buttons: ButtonsPanel,
 }
 const activePanel = computed<Component | undefined>(() =>
   activeCategory.value ? panelComponents[activeCategory.value] : undefined

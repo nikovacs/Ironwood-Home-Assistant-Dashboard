@@ -35,8 +35,8 @@
   --color-cat-alerts-soft: #ffedd5;
   --color-cat-climate: #10b981;
   --color-cat-climate-soft: #d1fae5;
-  --color-cat-scenes: #ec4899;
-  --color-cat-scenes-soft: #fce7f3;
+  --color-cat-buttons: #ec4899;
+  --color-cat-buttons-soft: #fce7f3;
 }
 
 /* Dark theme overrides */
@@ -70,8 +70,8 @@
   --color-cat-alerts-soft: #431407;
   --color-cat-climate: #34d399;
   --color-cat-climate-soft: #064e3b;
-  --color-cat-scenes: #f472b6;
-  --color-cat-scenes-soft: #500724;
+  --color-cat-buttons: #f472b6;
+  --color-cat-buttons-soft: #500724;
 }
 
 /* Global transitions for theme switching */

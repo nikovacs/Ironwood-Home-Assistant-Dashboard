@@ -32,6 +32,7 @@ const colorMap: Record<string, ColorSet> = {
   alarm:    { icon: 'text-cat-alarm',    bg: 'bg-cat-alarm-soft',    border: 'border-cat-alarm' },
   cctv:     { icon: 'text-cat-cctv',     bg: 'bg-cat-cctv-soft',    border: 'border-cat-cctv' },
   climate:  { icon: 'text-cat-climate',  bg: 'bg-cat-climate-soft',  border: 'border-cat-climate' },
+  scenes:   { icon: 'text-cat-scenes',   bg: 'bg-cat-scenes-soft',   border: 'border-cat-scenes' },
 }
 
 const colors: ColorSet = colorMap[props.color] || colorMap.lighting

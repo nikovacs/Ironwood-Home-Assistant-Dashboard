@@ -33,6 +33,8 @@
   --color-cat-cctv-soft: #cffafe;
   --color-cat-alerts: #f97316;
   --color-cat-alerts-soft: #ffedd5;
+  --color-cat-climate: #10b981;
+  --color-cat-climate-soft: #d1fae5;
 }
 
 /* Dark theme overrides */
@@ -64,6 +66,8 @@
   --color-cat-cctv-soft: #083344;
   --color-cat-alerts: #fb923c;
   --color-cat-alerts-soft: #431407;
+  --color-cat-climate: #34d399;
+  --color-cat-climate-soft: #064e3b;
 }
 
 /* Global transitions for theme switching */

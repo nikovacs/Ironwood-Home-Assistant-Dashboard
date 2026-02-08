@@ -8,11 +8,13 @@ import AudioPanel from './components/panels/AudioPanel.vue'
 import AlarmPanel from './components/panels/AlarmPanel.vue'
 import CCTVPanel from './components/panels/CCTVPanel.vue'
 import AlertsPanel from './components/panels/AlertsPanel.vue'
+import ClimatePanel from './components/panels/ClimatePanel.vue'
 import IconBell from './components/icons/IconBell.vue'
 import IconLightbulb from './components/icons/IconLightbulb.vue'
 import IconSpeaker from './components/icons/IconSpeaker.vue'
 import IconShield from './components/icons/IconShield.vue'
 import IconCamera from './components/icons/IconCamera.vue'
+import IconThermometer from './components/icons/IconThermometer.vue'
 
 interface Category {
   id: string
@@ -29,7 +31,8 @@ const categories: Category[] = [
   { id: 'lighting', icon: IconLightbulb, label: 'Lighting', color: 'lighting' },
   { id: 'audio',    icon: IconSpeaker,   label: 'Audio',    color: 'audio' },
   { id: 'alarm',    icon: IconShield,    label: 'Alarm',    color: 'alarm' },
-  { id: 'cctv',     icon: IconCamera,    label: 'CCTV',     color: 'cctv' },
+  { id: 'cctv',     icon: IconCamera,      label: 'CCTV',     color: 'cctv' },
+  { id: 'climate',  icon: IconThermometer, label: 'Climate',  color: 'climate' },
 ]
 
 function selectCategory(id: string): void {
@@ -42,6 +45,7 @@ const panelComponents: Record<string, Component> = {
   audio: AudioPanel,
   alarm: AlarmPanel,
   cctv: CCTVPanel,
+  climate: ClimatePanel,
 }
 const activePanel = computed<Component | undefined>(() =>
   activeCategory.value ? panelComponents[activeCategory.value] : undefined

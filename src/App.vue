@@ -18,6 +18,7 @@ import IconShield from './components/icons/IconShield.vue'
 import IconCamera from './components/icons/IconCamera.vue'
 import IconThermometer from './components/icons/IconThermometer.vue'
 import FavoriteButton from './components/FavoriteButton.vue'
+import WeatherClockCard from './components/WeatherClockCard.vue'
 import IconLock from './components/icons/IconLock.vue'
 import IconCar from './components/icons/IconCar.vue'
 import IconFan from './components/icons/IconFan.vue'
@@ -32,6 +33,7 @@ interface Category {
 
 const activeCategory = ref<string | null>(null)
 const isExpanded = computed<boolean>(() => activeCategory.value !== null)
+const showBottomCard = computed<boolean>(() => !isExpanded.value && categories.length <= 8)
 
 const categories: Category[] = [
   { id: 'alerts',   icon: IconBell,        label: 'Alerts',   color: 'alerts',   status: '2 active' },
@@ -124,8 +126,8 @@ function onTouchEnd(): void {
 </script>
 
 <template>
-  <div class="flex min-h-[100dvh] flex-col bg-surface-primary">
-    <GreetingHeader />
+  <div class="flex min-h-dvh flex-col bg-surface-primary">
+    <GreetingHeader :hide-extras="showBottomCard" />
 
     <!-- Critical alert banner -->
     <CriticalBanner />
@@ -133,7 +135,7 @@ function onTouchEnd(): void {
     <!-- Favorites strip -->
     <Transition name="favorites">
       <div v-if="!isExpanded" class="favorites-strip">
-        <div class="flex justify-center gap-2 px-5 pt-3 overflow-x-auto">
+        <div class="flex justify-center gap-2 px-5 pt-3 pb-4 overflow-x-auto">
           <FavoriteButton
             v-for="fav in favorites"
             :key="fav.id"
@@ -161,6 +163,11 @@ function onTouchEnd(): void {
           />
         </div>
       </div>
+    </div>
+
+    <!-- Bottom weather + clock card (idle state only, no transition) -->
+    <div v-if="showBottomCard" class="weather-card-area">
+      <WeatherClockCard />
     </div>
 
     <!-- Panel — grows to fill remaining space -->
@@ -298,5 +305,16 @@ function onTouchEnd(): void {
   max-height: 0;
   opacity: 0;
   transform: translateY(-0.5rem);
+}
+
+/*
+  Bottom weather/clock card
+*/
+.weather-card-area {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0 2.5rem 1rem;
 }
 </style>

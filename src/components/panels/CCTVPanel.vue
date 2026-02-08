@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, type Component } from 'vue'
+import { shallowRef, type Component } from 'vue'
 import IconDoor from '../icons/IconDoor.vue'
 import IconTree from '../icons/IconTree.vue'
 import IconCar from '../icons/IconCar.vue'
@@ -14,14 +14,14 @@ interface Camera {
   lastMotion: string
 }
 
-const cameras = ref<Camera[]>([
+const cameras = shallowRef<Camera[]>([
   { id: 1, name: 'Front Door', icon: IconDoor, status: 'online', lastMotion: '3m ago' },
   { id: 2, name: 'Backyard', icon: IconTree, status: 'online', lastMotion: '12m ago' },
   { id: 3, name: 'Garage', icon: IconCar, status: 'online', lastMotion: '1h ago' },
   { id: 4, name: 'Driveway', icon: IconRoad, status: 'offline', lastMotion: '—' },
 ])
 
-const selectedCamera = ref<Camera | null>(null)
+const selectedCamera = shallowRef<Camera | null>(null)
 
 function selectCamera(cam: Camera): void {
   selectedCamera.value = selectedCamera.value?.id === cam.id ? null : cam

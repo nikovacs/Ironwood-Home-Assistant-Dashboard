@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, type Component } from 'vue'
+import { shallowRef, type Component } from 'vue'
 import IconSofa from '../icons/IconSofa.vue'
 import IconChefHat from '../icons/IconChefHat.vue'
 import IconBed from '../icons/IconBed.vue'
@@ -14,7 +14,7 @@ interface Room {
   on: boolean
 }
 
-const rooms = ref<Room[]>([
+const rooms = shallowRef<Room[]>([
   { name: 'Living Room', icon: IconSofa, brightness: 80, on: true },
   { name: 'Kitchen', icon: IconChefHat, brightness: 100, on: true },
   { name: 'Bedroom', icon: IconBed, brightness: 40, on: false },
@@ -25,6 +25,7 @@ const rooms = ref<Room[]>([
 
 function toggleRoom(room: Room): void {
   room.on = !room.on
+  rooms.value = [...rooms.value]
 }
 </script>
 

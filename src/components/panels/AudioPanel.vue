@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, type Component } from 'vue'
+import { ref, shallowRef, type Component } from 'vue'
 import IconSofa from '../icons/IconSofa.vue'
 import IconChefHat from '../icons/IconChefHat.vue'
 import IconBed from '../icons/IconBed.vue'
@@ -24,7 +24,7 @@ const isPlaying = ref<boolean>(true)
 const currentTrack = ref<Track>({ title: 'Chill Vibes Mix', artist: 'Lofi Radio' })
 const volume = ref<number>(65)
 
-const zones = ref<Zone[]>([
+const zones = shallowRef<Zone[]>([
   { name: 'Living Room', icon: IconSofa, active: true },
   { name: 'Kitchen', icon: IconChefHat, active: false },
   { name: 'Bedroom', icon: IconBed, active: true },
@@ -33,6 +33,7 @@ const zones = ref<Zone[]>([
 
 function toggleZone(zone: Zone): void {
   zone.active = !zone.active
+  zones.value = [...zones.value]
 }
 </script>
 

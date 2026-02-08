@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, type Component } from 'vue'
+import { ref, shallowRef, computed, type Component } from 'vue'
 import GreetingHeader from './components/GreetingHeader.vue'
 import CategoryButton from './components/CategoryButton.vue'
 import CriticalBanner from './components/CriticalBanner.vue'
@@ -67,7 +67,7 @@ interface Favorite {
   active: boolean
 }
 
-const favorites = ref<Favorite[]>([
+const favorites = shallowRef<Favorite[]>([
   { id: 'porch',  icon: IconLightbulb, label: 'Front Porch', active: true },
   { id: 'lock',   icon: IconLock,      label: 'Lock Door',   active: false },
   { id: 'garage', icon: IconCar,       label: 'Garage',      active: false },
@@ -76,6 +76,50 @@ const favorites = ref<Favorite[]>([
 
 function toggleFavorite(fav: Favorite): void {
   fav.active = !fav.active
+  favorites.value = [...favorites.value]
+}
+
+/* Swipe-down to dismiss panel */
+const panelRef = ref<HTMLElement | null>(null)
+const dragOffset = ref<number>(0)
+const isDragging = ref<boolean>(false)
+let touchStartY = 0
+let touchStartTime = 0
+
+function onTouchStart(e: TouchEvent): void {
+  if (!isExpanded.value) { return }
+  const el = panelRef.value
+  if (!el) { return }
+  /* Only start drag if panel is scrolled to top */
+  const scrollable = el.querySelector('.overflow-y-auto')
+  if (scrollable && scrollable.scrollTop > 0) { return }
+  touchStartY = e.touches[0].clientY
+  touchStartTime = Date.now()
+  isDragging.value = true
+  dragOffset.value = 0
+}
+
+function onTouchMove(e: TouchEvent): void {
+  if (!isDragging.value) { return }
+  const dy = e.touches[0].clientY - touchStartY
+  if (dy > 0) {
+    dragOffset.value = dy
+    e.preventDefault()
+  } else {
+    dragOffset.value = 0
+  }
+}
+
+function onTouchEnd(): void {
+  if (!isDragging.value) { return }
+  isDragging.value = false
+  const elapsed = Date.now() - touchStartTime
+  const velocity = dragOffset.value / elapsed
+  /* Dismiss if dragged far enough or flicked fast */
+  if (dragOffset.value > 80 || velocity > 0.5) {
+    activeCategory.value = null
+  }
+  dragOffset.value = 0
 }
 </script>
 
@@ -87,16 +131,20 @@ function toggleFavorite(fav: Favorite): void {
     <CriticalBanner />
 
     <!-- Favorites strip -->
-    <div v-if="!isExpanded" class="flex justify-center gap-2 px-5 pt-3 overflow-x-auto">
-      <FavoriteButton
-        v-for="fav in favorites"
-        :key="fav.id"
-        :icon="fav.icon"
-        :label="fav.label"
-        :active="fav.active"
-        @press="toggleFavorite(fav)"
-      />
-    </div>
+    <Transition name="favorites">
+      <div v-if="!isExpanded" class="favorites-strip">
+        <div class="flex justify-center gap-2 px-5 pt-3 overflow-x-auto">
+          <FavoriteButton
+            v-for="fav in favorites"
+            :key="fav.id"
+            :icon="fav.icon"
+            :label="fav.label"
+            :active="fav.active"
+            @press="toggleFavorite(fav)"
+          />
+        </div>
+      </div>
+    </Transition>
 
     <!-- Category buttons — height shrinks when panel is open -->
     <div class="buttons-area" :class="{ compact: isExpanded }">
@@ -117,10 +165,22 @@ function toggleFavorite(fav: Favorite): void {
 
     <!-- Panel — grows to fill remaining space -->
     <div
+      ref="panelRef"
       class="panel-area rounded-t-3xl border-t bg-surface-panel"
-      :class="isExpanded ? 'is-open border-border-subtle' : 'border-transparent'"
+      :class="[
+        isExpanded ? 'is-open border-border-subtle' : 'border-transparent',
+        isDragging ? 'dragging' : ''
+      ]"
+      :style="dragOffset > 0 ? { transform: `translateY(${String(dragOffset)}px)`, opacity: String(1 - dragOffset / 300) } : undefined"
+      @touchstart="onTouchStart"
+      @touchmove="onTouchMove"
+      @touchend="onTouchEnd"
     >
-      <div class="overflow-y-auto px-5 pt-5 pb-8 h-full">
+      <!-- Drag handle -->
+      <div v-if="isExpanded" class="flex justify-center pt-3 pb-1 cursor-grab">
+        <div class="h-1 w-10 rounded-full bg-border-subtle" />
+      </div>
+      <div class="overflow-y-auto px-5 pt-2 pb-8 h-full">
         <KeepAlive>
           <component :is="activePanel" :key="activeCategory" />
         </KeepAlive>
@@ -211,5 +271,32 @@ function toggleFavorite(fav: Favorite): void {
 .panel-area.is-open {
   flex: 1 1 0px;
   opacity: 1;
+}
+
+.panel-area.dragging {
+  transition: none;
+}
+
+/*
+  Favorites strip: slide + fade + collapse
+*/
+.favorites-strip {
+  overflow: hidden;
+}
+
+.favorites-enter-active,
+.favorites-leave-active {
+  transition:
+    max-height 400ms cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 300ms ease,
+    transform 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 4rem;
+}
+
+.favorites-enter-from,
+.favorites-leave-to {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-0.5rem);
 }
 </style>

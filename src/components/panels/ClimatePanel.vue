@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, type Component } from 'vue'
+import { shallowRef, type Component } from 'vue'
 import IconSofa from '../icons/IconSofa.vue'
 import IconBed from '../icons/IconBed.vue'
 import IconMonitor from '../icons/IconMonitor.vue'
@@ -12,7 +12,7 @@ interface Zone {
   mode: 'heat' | 'cool' | 'off'
 }
 
-const zones = ref<Zone[]>([
+const zones = shallowRef<Zone[]>([
   { name: 'Living Room', icon: IconSofa, currentTemp: 72, targetTemp: 73, mode: 'cool' },
   { name: 'Bedroom', icon: IconBed, currentTemp: 68, targetTemp: 67, mode: 'cool' },
   { name: 'Office', icon: IconMonitor, currentTemp: 71, targetTemp: 72, mode: 'heat' },
@@ -22,6 +22,7 @@ function cycleMode(zone: Zone): void {
   const modes: Zone['mode'][] = ['heat', 'cool', 'off']
   const idx = modes.indexOf(zone.mode)
   zone.mode = modes[(idx + 1) % modes.length]
+  zones.value = [...zones.value]
 }
 
 const modeLabel: Record<Zone['mode'], string> = {

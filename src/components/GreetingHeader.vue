@@ -2,9 +2,6 @@
 import { useGreeting } from '../composables/useGreeting'
 import { useTheme } from '../composables/useTheme'
 
-const { greeting, timeString, dateString } = useGreeting()
-useTheme()
-
 interface Props {
   weatherTemp?: string
   weatherIcon?: string
@@ -14,6 +11,9 @@ withDefaults(defineProps<Props>(), {
   weatherTemp: '72°',
   weatherIcon: '⛅',
 })
+
+const { greeting, timeString, dateString } = useGreeting()
+useTheme()
 </script>
 
 <template>

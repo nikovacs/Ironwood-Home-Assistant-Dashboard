@@ -56,8 +56,8 @@ function dismiss(id: number): void {
           </div>
         </div>
         <button
-          @click="dismiss(alert.id)"
           class="text-xs text-text-secondary hover:text-text-primary cursor-pointer"
+          @click="dismiss(alert.id)"
         >
           Dismiss
         </button>

@@ -53,7 +53,6 @@ function selectCamera(cam: Camera): void {
       <button
         v-for="cam in cameras"
         :key="cam.id"
-        @click="selectCamera(cam)"
         class="flex flex-col items-start gap-2 rounded-2xl border p-4 transition-all duration-200 active:scale-[0.97] cursor-pointer"
         :class="[
           selectedCamera?.id === cam.id
@@ -61,6 +60,7 @@ function selectCamera(cam: Camera): void {
             : 'bg-surface-card border-border-subtle',
           cam.status === 'offline' ? 'opacity-50' : ''
         ]"
+        @click="selectCamera(cam)"
       >
         <div class="flex w-full items-center justify-between">
           <span class="text-2xl">{{ cam.icon }}</span>

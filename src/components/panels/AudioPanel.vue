@@ -47,9 +47,9 @@ function toggleZone(zone: Zone): void {
           <p class="text-xs text-text-secondary truncate">{{ currentTrack.artist }}</p>
         </div>
         <button
-          @click="isPlaying = !isPlaying"
           class="flex h-10 w-10 items-center justify-center rounded-full bg-cat-audio text-white text-lg
                  active:scale-95 transition-transform cursor-pointer"
+          @click="isPlaying = !isPlaying"
         >
           {{ isPlaying ? '⏸' : '▶️' }}
         </button>
@@ -72,11 +72,11 @@ function toggleZone(zone: Zone): void {
         <button
           v-for="zone in zones"
           :key="zone.name"
-          @click="toggleZone(zone)"
           class="flex items-center gap-2 rounded-2xl border p-3 transition-all duration-200 active:scale-[0.97] cursor-pointer"
           :class="zone.active
             ? 'bg-cat-audio-soft border-cat-audio/30'
             : 'bg-surface-card border-border-subtle'"
+          @click="toggleZone(zone)"
         >
           <span class="text-lg">{{ zone.icon }}</span>
           <span class="text-sm font-medium text-text-primary">{{ zone.name }}</span>

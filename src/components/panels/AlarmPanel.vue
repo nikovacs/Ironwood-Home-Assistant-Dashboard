@@ -47,13 +47,13 @@ const isArmed = computed<boolean>(() => status.value !== 'disarmed')
       <button
         v-for="mode in modes"
         :key="mode.id"
-        @click="setMode(mode.id)"
         class="flex flex-col items-center gap-2 rounded-2xl border p-4 transition-all duration-200 active:scale-[0.97] cursor-pointer"
         :class="status === mode.id
           ? mode.id === 'disarmed'
             ? 'bg-green-100 border-green-300 dark:bg-green-900/20 dark:border-green-700'
             : 'bg-cat-alarm-soft border-cat-alarm/30'
           : 'bg-surface-card border-border-subtle'"
+        @click="setMode(mode.id)"
       >
         <span class="text-2xl">{{ mode.icon }}</span>
         <div class="text-center">

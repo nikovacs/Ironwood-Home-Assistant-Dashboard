@@ -17,13 +17,14 @@ export function useGreeting(): UseGreetingReturn {
   })
 
   onUnmounted(() => {
-    if (timer) clearInterval(timer)
+    if (timer) { clearInterval(timer) }
   })
 
   const greeting = computed<string>(() => {
     const hour = now.value.getHours()
-    if (hour < 12) return 'Good morning'
-    if (hour < 17) return 'Good afternoon'
+    if (hour < 5) { return 'Good night' }
+    if (hour < 12) { return 'Good morning' }
+    if (hour < 17) { return 'Good afternoon' }
     return 'Good evening'
   })
 

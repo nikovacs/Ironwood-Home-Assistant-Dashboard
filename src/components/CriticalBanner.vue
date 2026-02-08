@@ -15,7 +15,7 @@ defineEmits<{
 
 const visible = ref<boolean>(true)
 
-function handleDismiss(emit: (e: 'dismiss') => void): void {
+function handleDismiss(emit: (_e: 'dismiss') => void): void {
   visible.value = false
   emit('dismiss')
 }
@@ -30,9 +30,9 @@ function handleDismiss(emit: (e: 'dismiss') => void): void {
       <span class="text-lg">🚨</span>
       <p class="flex-1 text-sm font-semibold text-cat-alarm">{{ message }}</p>
       <button
-        @click="handleDismiss($emit)"
         class="ml-2 text-cat-alarm opacity-60 hover:opacity-100 transition-opacity cursor-pointer text-lg leading-none"
         aria-label="Dismiss"
+        @click="handleDismiss($emit)"
       >
         ✕
       </button>

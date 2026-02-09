@@ -1,52 +1,28 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import IconDoor from '../icons/IconDoor.vue'
-import IconCar from '../icons/IconCar.vue'
-import IconLock from '../icons/IconLock.vue'
-import IconUnlock from '../icons/IconUnlock.vue'
+import { computed, ref } from 'vue'
+import { useHass } from '../../composables/useHass'
 
-interface QuickAction {
-  id: number
-  name: string
-  description: string
-  active: boolean
-}
+const { entities, hassService } = useHass()
 
-type AccessState = 'locked' | 'closed' | 'open'
+const allScenes = computed(() =>
+  Object.values(entities.value)
+    .filter(e => e.entity_id.startsWith('scene.'))
+    .sort((a, b) => (a.attributes.friendly_name ?? a.entity_id).localeCompare(b.attributes.friendly_name ?? b.entity_id))
+)
 
-interface AccessControl {
-  id: number
-  name: string
-  state: AccessState
-}
+const sceneGridRows = computed(() => Math.ceil(allScenes.value.length / 2))
 
-const actions = ref<QuickAction[]>([
-  { id: 1, name: 'Good Morning', description: 'Lights on, blinds up, coffee maker', active: false },
-  { id: 2, name: 'Movie Night', description: 'Dim lights, TV on, blinds down', active: false },
-  { id: 3, name: 'Away Mode', description: 'Lights off, alarm armed, thermostat eco', active: true },
-  { id: 4, name: 'Bedtime', description: 'Lights off, doors locked, alarm home', active: false },
-])
+/* Track which scene buttons are in their "fired" flash state */
+const firedScenes = ref<Set<string>>(new Set())
 
-const access = ref<AccessControl[]>([
-  { id: 1, name: 'Front Door', state: 'locked' },
-  { id: 2, name: 'Garage Door', state: 'closed' },
-  { id: 3, name: 'Side Gate', state: 'closed' },
-])
-
-function toggleAction(action: QuickAction): void {
-  action.active = !action.active
-}
-
-function cycleAccess(item: AccessControl): void {
-  const states: AccessState[] = ['locked', 'closed', 'open']
-  const idx = states.indexOf(item.state)
-  item.state = states[(idx + 1) % states.length]
-}
-
-const accessStyle: Record<AccessState, string> = {
-  locked: 'bg-cat-alarm-soft text-cat-alarm',
-  closed: 'bg-surface-button-active text-text-secondary',
-  open: 'bg-cat-buttons-soft text-cat-buttons',
+function activateScene(entityId: string): void {
+  hassService('scene', 'turn_on', { entity_id: entityId })
+  firedScenes.value.add(entityId)
+  firedScenes.value = new Set(firedScenes.value)
+  globalThis.setTimeout(() => {
+    firedScenes.value.delete(entityId)
+    firedScenes.value = new Set(firedScenes.value)
+  }, 600)
 }
 </script>
 
@@ -56,56 +32,48 @@ const accessStyle: Record<AccessState, string> = {
       <h2 class="text-lg font-semibold text-text-primary">Buttons</h2>
     </div>
 
-    <!-- Quick Actions -->
+    <!-- Scenes -->
     <div>
-      <p class="text-xs text-text-muted uppercase tracking-wide mb-2">Quick Actions</p>
-      <div class="grid grid-cols-2 gap-3">
-        <button
-          v-for="action in actions"
-          :key="action.id"
-          class="flex flex-col items-start gap-1.5 rounded-2xl border p-4 transition-all duration-200 active:scale-[0.97] cursor-pointer text-left"
-          :class="action.active
-            ? 'bg-cat-buttons-soft border-cat-buttons/30'
-            : 'bg-surface-card border-border-subtle'"
-          @click="toggleAction(action)"
-        >
-          <p class="text-sm font-medium text-text-primary">{{ action.name }}</p>
-          <p class="text-xs text-text-secondary leading-snug">{{ action.description }}</p>
-          <span
-            class="mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium"
-            :class="action.active
-              ? 'bg-cat-buttons/20 text-cat-buttons'
-              : 'bg-surface-button-active text-text-muted'"
-          >
-            {{ action.active ? 'Running' : 'Activate' }}
-          </span>
-        </button>
+      <p class="text-xs text-text-muted uppercase tracking-wide mb-2">Scenes</p>
+      <div v-if="allScenes.length === 0" class="py-4 text-center text-sm text-text-muted">
+        No scenes available
       </div>
-    </div>
-
-    <!-- Access Controls -->
-    <div>
-      <p class="text-xs text-text-muted uppercase tracking-wide mb-2">Access</p>
-      <div class="space-y-2">
+      <div v-else class="grid grid-cols-2 grid-flow-col gap-3" :style="{ gridTemplateRows: `repeat(${sceneGridRows}, auto)` }">
         <button
-          v-for="item in access"
-          :key="item.id"
-          class="flex w-full items-center gap-3 rounded-xl border border-border-subtle bg-surface-card px-4 py-3 transition-all duration-200 active:scale-[0.98] cursor-pointer"
-          @click="cycleAccess(item)"
+          v-for="scene in allScenes"
+          :key="scene.entity_id"
+          class="scene-btn flex items-center rounded-2xl border p-4 cursor-pointer text-left select-none"
+          :class="firedScenes.has(scene.entity_id)
+            ? 'bg-cat-buttons-soft border-cat-buttons/30 scene-fired'
+            : 'bg-surface-card border-border-subtle'"
+          @click="activateScene(scene.entity_id)"
         >
-          <component
-            :is="item.name === 'Front Door' ? (item.state === 'locked' ? IconLock : IconUnlock) : (item.name === 'Garage Door' ? IconCar : IconDoor)"
-            class="h-5 w-5 shrink-0 text-text-secondary"
-          />
-          <span class="flex-1 text-sm font-medium text-text-primary text-left">{{ item.name }}</span>
-          <span
-            class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium capitalize"
-            :class="accessStyle[item.state]"
-          >
-            {{ item.state }}
-          </span>
+          <p class="text-sm font-medium text-text-primary">{{ scene.attributes.friendly_name ?? scene.entity_id }}</p>
         </button>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.scene-btn {
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    transform 150ms ease;
+}
+
+.scene-btn:active {
+  transform: scale(0.95);
+}
+
+.scene-btn.scene-fired {
+  animation: scene-flash 600ms ease-out;
+}
+
+@keyframes scene-flash {
+  0%   { transform: scale(0.95); }
+  30%  { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+</style>

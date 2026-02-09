@@ -38,7 +38,7 @@ const showBottomCard = computed<boolean>(() => !isExpanded.value && categories.l
 const categories: Category[] = [
   { id: 'alerts',   icon: IconBell,        label: 'Alerts',   color: 'alerts',   status: '2 active' },
   { id: 'lighting', icon: IconLightbulb,   label: 'Lighting', color: 'lighting', status: '4/7 on' },
-  { id: 'buttons',  icon: IconTap,         label: 'Buttons',  color: 'buttons',  status: 'Away Mode' },
+  { id: 'buttons',  icon: IconTap,         label: 'Buttons',  color: 'buttons',  status: '' },
   { id: 'audio',    icon: IconSpeaker,     label: 'Audio',    color: 'audio',    status: 'Playing' },
   { id: 'alarm',    icon: IconShield,      label: 'Alarm',    color: 'alarm',    status: 'Armed Home' },
   { id: 'cctv',     icon: IconCamera,      label: 'CCTV',     color: 'cctv',     status: '4/4 online' },
@@ -83,31 +83,33 @@ function toggleFavorite(fav: Favorite): void {
 
 /* Swipe-down to dismiss panel */
 const panelRef = ref<HTMLElement | null>(null)
+const scrollRef = ref<HTMLElement | null>(null)
 const dragOffset = ref<number>(0)
 const isDragging = ref<boolean>(false)
 let touchStartY = 0
 let touchStartTime = 0
+let canDismiss = false
 
 function onTouchStart(e: TouchEvent): void {
   if (!isExpanded.value) { return }
-  const el = panelRef.value
-  if (!el) { return }
-  /* Only start drag if panel is scrolled to top */
-  const scrollable = el.querySelector('.overflow-y-auto')
-  if (scrollable && scrollable.scrollTop > 0) { return }
   touchStartY = e.touches[0].clientY
   touchStartTime = Date.now()
-  isDragging.value = true
   dragOffset.value = 0
+  /* Allow dismiss if content is scrolled to top */
+  const el = scrollRef.value
+  canDismiss = !el || el.scrollTop <= 0
 }
 
 function onTouchMove(e: TouchEvent): void {
-  if (!isDragging.value) { return }
   const dy = e.touches[0].clientY - touchStartY
-  if (dy > 0) {
+  if (canDismiss && dy > 0) {
+    /* User is at top and pulling down → start dismiss drag */
+    isDragging.value = true
     dragOffset.value = dy
     e.preventDefault()
-  } else {
+  } else if (isDragging.value && dy <= 0) {
+    /* Reversed direction — cancel drag, let scroll take over */
+    isDragging.value = false
     dragOffset.value = 0
   }
 }
@@ -182,15 +184,21 @@ function onTouchEnd(): void {
         isDragging ? 'dragging' : ''
       ]"
       :style="dragOffset > 0 ? { transform: `translateY(${String(dragOffset)}px)`, opacity: String(1 - dragOffset / 300) } : undefined"
-      @touchstart="onTouchStart"
-      @touchmove="onTouchMove"
-      @touchend="onTouchEnd"
     >
       <!-- Drag handle -->
-      <div v-if="isExpanded" class="flex justify-center pt-3 pb-1 cursor-grab">
+      <div
+        v-if="isExpanded"
+        class="flex justify-center pt-3 pb-1 cursor-grab"
+      >
         <div class="h-1 w-10 rounded-full bg-border-subtle" />
       </div>
-      <div class="overflow-y-auto px-5 pt-2 pb-8 h-full">
+      <div
+        ref="scrollRef"
+        class="panel-scroll px-5 pt-2 pb-8"
+        @touchstart="onTouchStart"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEnd"
+      >
         <KeepAlive>
           <component :is="activePanel" :key="activeCategory" />
         </KeepAlive>
@@ -270,6 +278,8 @@ function onTouchEnd(): void {
 */
 .panel-area {
   flex: 0 1 0px;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
   opacity: 0;
   overflow: hidden;
@@ -285,6 +295,14 @@ function onTouchEnd(): void {
 
 .panel-area.dragging {
   transition: none;
+}
+
+.panel-scroll {
+  flex: 1 1 0px;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 /*

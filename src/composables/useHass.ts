@@ -19,18 +19,29 @@ export function useHass() {
   const entities = ref<Record<string, HassEntity>>({})
 
   // Your long-lived token from HA profile → Long-Lived Access Tokens
-  const HA_TOKEN = import.meta.env.HA_LLAT_TOKEN as string || ''
-  const HA_URL = import.meta.env.HA_URL as string || 'http://homeassistant:8123'
+  const HA_TOKEN = import.meta.env.VITE_HA_LLAT_TOKEN as string || ''
+  const HA_URL = import.meta.env.VITE_HA_URL as string || 'http://homeassistant.local:8123'
 
   async function connect() {
+    console.log('[HASS] connect() called', { url: HA_URL, tokenLength: HA_TOKEN.length })
+
     if (!HA_TOKEN) {
-      error.value = 'Missing HA token (set HA_LLAT_TOKEN in .env)'
+      error.value = 'Missing HA token (set VITE_HA_LLAT_TOKEN in .env)'
+      console.error('[HASS]', error.value)
       return
     }
-    if (isConnecting.value || connection.value) return
+    if (isConnecting.value) {
+      console.warn('[HASS] Already connecting, skipping')
+      return
+    }
+    if (connection.value) {
+      console.warn('[HASS] Already connected, skipping')
+      return
+    }
 
     isConnecting.value = true
     error.value = null
+    console.log('[HASS] Attempting connection to', HA_URL)
 
     try {
       const auth = createLongLivedTokenAuth(HA_URL, HA_TOKEN)

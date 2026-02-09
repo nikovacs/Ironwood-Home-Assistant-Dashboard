@@ -381,7 +381,33 @@ function onTouchEnd(): void {
   }
 
   .buttons-area.compact {
-    display: none;
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    pointer-events: none;
+    transition:
+      max-height 400ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 250ms ease,
+      padding 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Restore opening transition when going back to idle */
+  .buttons-area {
+    max-height: 100dvh;
+    opacity: 1;
+    overflow: hidden;
+    transition:
+      max-height 600ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 400ms 100ms ease,
+      padding 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .panel-area {
+    transition:
+      flex 400ms cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 300ms 100ms ease;
   }
 
   .buttons-row {

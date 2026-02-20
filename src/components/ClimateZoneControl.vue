@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import IconChevronLeft from './icons/IconChevronLeft.vue'
 import ClimateTemperatureArc from './ClimateTemperatureArc.vue'
 
@@ -53,6 +54,60 @@ const modeTargetTempClass: Record<string, string> = {
   dry: 'text-text-muted',
   fan_only: 'text-text-muted',
 }
+
+/** Arc gradient: low-temp end (minus) and high-temp end (plus). Match arc gradient in ClimateTemperatureArc. */
+const gradientLowColor: Record<string, string> = {
+  cool: '#1e40af',
+  heat: '#fca5a5',
+  auto: '#93c5fd',
+  heat_cool: '#93c5fd',
+  off: '#e5e7eb',
+  dry: '#e5e7eb',
+  fan_only: '#e5e7eb',
+}
+const gradientHighColor: Record<string, string> = {
+  cool: '#93c5fd',
+  heat: '#b91c1c',
+  auto: '#b91c1c',
+  heat_cool: '#b91c1c',
+  off: '#4b5563',
+  dry: '#4b5563',
+  fan_only: '#4b5563',
+}
+
+const minusRingColor = computed(() => gradientLowColor[props.zone.mode] ?? gradientLowColor.off)
+const plusRingColor = computed(() => gradientHighColor[props.zone.mode] ?? gradientHighColor.off)
+
+const STEP_DEBOUNCE_MS = 50
+const lastStepAt = ref(0)
+
+function stepDown(): void {
+  const now = Date.now()
+  if (now - lastStepAt.value < STEP_DEBOUNCE_MS) {
+    return
+  }
+  lastStepAt.value = now
+  const t = props.zone.targetTemp ?? props.zone.min_temp
+  const next = Math.max(props.zone.min_temp, t - props.zone.temperature_step)
+  emit('update:temperature', next)
+}
+
+function stepUp(): void {
+  const now = Date.now()
+  if (now - lastStepAt.value < STEP_DEBOUNCE_MS) {
+    return
+  }
+  lastStepAt.value = now
+  const t = props.zone.targetTemp ?? props.zone.max_temp
+  const next = Math.min(props.zone.max_temp, t + props.zone.temperature_step)
+  emit('update:temperature', next)
+}
+
+function blurAfterDelay(el: EventTarget | null): void {
+  if (el instanceof HTMLElement) {
+    setTimeout(() => el.blur(), 120)
+  }
+}
 </script>
 
 <template>
@@ -70,26 +125,21 @@ const modeTargetTempClass: Record<string, string> = {
     </div>
 
     <div class="climate-detail-scroll flex min-h-0 flex-1 flex-col items-center overflow-x-hidden px-5 py-4">
-      <div class="climate-detail-readout flex shrink-0 gap-8 text-center sm:gap-12">
+      <div class="climate-detail-readout flex shrink-0 justify-center text-center">
         <div>
           <p class="text-sm text-text-muted uppercase tracking-wide">Current</p>
-          <p class="text-3xl font-bold text-text-primary sm:text-4xl md:text-5xl">
-            {{ props.zone.currentTemp !== null ? `${props.zone.currentTemp}°` : '—' }}
-          </p>
-        </div>
-        <div>
-          <p class="text-sm text-text-muted uppercase tracking-wide">Target</p>
-          <p
-            class="text-3xl font-bold sm:text-4xl md:text-5xl"
-            :class="modeTargetTempClass[props.zone.mode] ?? 'text-text-muted'"
-          >
-            {{ props.zone.targetTemp !== null ? `${props.zone.targetTemp}°` : '—' }}
+          <p class="relative inline-block text-3xl font-bold text-text-primary tabular-nums sm:text-4xl md:text-5xl">
+            <template v-if="props.zone.currentTemp !== null">
+              <span>{{ props.zone.currentTemp }}</span>
+              <span class="absolute left-full top-0">°</span>
+            </template>
+            <template v-else>—</template>
           </p>
         </div>
       </div>
 
       <div class="climate-arc-wrapper flex min-h-0 flex-1 items-center justify-center">
-        <div class="climate-arc-slot min-h-0 w-full max-w-full flex-1">
+        <div class="climate-arc-slot min-h-0 w-full max-w-full flex-1 relative">
           <ClimateTemperatureArc
             :model-value="props.zone.targetTemp"
             :min="props.zone.min_temp"
@@ -98,10 +148,50 @@ const modeTargetTempClass: Record<string, string> = {
             :mode="props.zone.mode"
             @update:model-value="emit('update:temperature', $event)"
           />
+          <!-- Target temp inside the arc: center by digits only, ° to the right -->
+          <div
+            class="climate-arc-center pointer-events-none absolute inset-0 flex items-center justify-center"
+            aria-hidden="true"
+          >
+            <span
+              class="relative inline-block text-4xl font-bold tabular-nums sm:text-5xl md:text-6xl"
+              :class="modeTargetTempClass[props.zone.mode] ?? 'text-text-muted'"
+            >
+              <template v-if="props.zone.targetTemp !== null">
+                <span>{{ props.zone.targetTemp }}</span>
+                <span class="absolute left-full top-0">°</span>
+              </template>
+              <template v-else>—</template>
+            </span>
+          </div>
         </div>
       </div>
 
-      <p class="mt-2 shrink-0 text-sm text-text-muted sm:mt-4">Drag to set temperature</p>
+      <!-- Fine-tune buttons directly below the arc -->
+      <div class="climate-arc-step-buttons mt-0.5 flex shrink-0 items-center justify-center gap-4 sm:mt-1">
+        <button
+          type="button"
+          class="flex h-12 w-12 items-center justify-center rounded-full border-2 border-border-subtle bg-surface-card text-text-primary transition-colors hover:border-text-secondary hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:hover:border-border-subtle disabled:hover:bg-surface-card sm:h-14 sm:w-14"
+          :style="{ '--tw-ring-color': minusRingColor }"
+          :disabled="props.zone.targetTemp !== null && props.zone.targetTemp <= props.zone.min_temp"
+          aria-label="Decrease temperature"
+          @click="(e) => { stepDown(); blurAfterDelay(e.currentTarget) }"
+        >
+          <span class="text-2xl font-medium leading-none sm:text-3xl">−</span>
+        </button>
+        <button
+          type="button"
+          class="flex h-12 w-12 items-center justify-center rounded-full border-2 border-border-subtle bg-surface-card text-text-primary transition-colors hover:border-text-secondary hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:hover:border-border-subtle disabled:hover:bg-surface-card sm:h-14 sm:w-14"
+          :style="{ '--tw-ring-color': plusRingColor }"
+          :disabled="props.zone.targetTemp !== null && props.zone.targetTemp >= props.zone.max_temp"
+          aria-label="Increase temperature"
+          @click="(e) => { stepUp(); blurAfterDelay(e.currentTarget) }"
+        >
+          <span class="text-2xl font-medium leading-none sm:text-3xl">+</span>
+        </button>
+      </div>
+
+      <p class="mt-2 shrink-0 text-sm text-text-muted sm:mt-4">Drag arc or use buttons to set temperature</p>
 
       <div class="climate-detail-modes mt-4 flex shrink-0 flex-wrap justify-center gap-3 sm:mt-8">
         <button

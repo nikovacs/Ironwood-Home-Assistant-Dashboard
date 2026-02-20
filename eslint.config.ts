@@ -3,6 +3,7 @@ import tseslint from 'typescript-eslint'
 import pluginVue from 'eslint-plugin-vue'
 import vueParser from 'vue-eslint-parser'
 import { defineConfig } from 'eslint/config'
+import globals from 'globals'
 
 export default defineConfig([
   // Ignored paths
@@ -35,6 +36,7 @@ export default defineConfig([
   {
     files: ['**/*.vue'],
     languageOptions: {
+      globals: globals.browser,
       parser: vueParser,
       parserOptions: {
         parser: tseslint.parser,

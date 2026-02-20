@@ -1,0 +1,37 @@
+# =============================================================================
+# Climate zones — example configuration
+# =============================================================================
+#
+# Copy this file to climate-zones.yaml and edit the entity_id values to match
+# your Home Assistant climate entities (e.g. from the Venstar HACS integration).
+#
+# How it works:
+#   1. The Climate panel loads this file (or climate-zones.json) on startup.
+#   2. Up to 4 zones are shown as read-only cards with live data from HA.
+#   3. Tapping a zone opens the full-panel view with temperature and mode controls.
+#
+# Deployment:
+#   - Standalone (app served at its own URL): put the file in public/ and it
+#     will be served at /climate-zones.yaml.
+#   - Home Assistant: put the file in config/www/ and use /local/climate-zones.yaml
+#     (you would need to change the fetch path in the app to /local/climate-zones.yaml).
+#
+# If the file is missing or fetch fails, the panel falls back to dummy zones so
+# you can test the UI offline (zones will show as "Unavailable" until HA is connected).
+#
+# =============================================================================
+
+zones:
+  # entity_id: exact climate entity_id from Home Assistant (Developer Tools → States)
+  # name: optional; overrides the entity's friendly_name for display
+  - entity_id: climate.living_room
+    name: Living Room
+
+  - entity_id: climate.bedroom
+    name: Bedroom
+
+  - entity_id: climate.office
+    name: Office
+
+  - entity_id: climate.guest_room
+    name: Guest Room

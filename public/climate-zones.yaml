@@ -1,0 +1,12 @@
+# Climate zones for the dashboard (Venstar / Home Assistant).
+# List up to 4 climate entity_ids. Optional "name" overrides HA friendly name.
+# Entity IDs match your HA climate entities (e.g. from Venstar HACS integration).
+zones:
+  - entity_id: climate.living_room
+    name: Living Room
+  - entity_id: climate.bedroom
+    name: Bedroom
+  - entity_id: climate.office
+    name: Office
+  - entity_id: climate.guest_room
+    name: Guest Room

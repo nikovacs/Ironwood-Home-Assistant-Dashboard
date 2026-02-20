@@ -145,7 +145,7 @@ onMounted(async () => {
       >
         <div class="flex shrink-0 items-center justify-between">
           <h2 class="text-xl font-semibold text-text-primary">Climate</h2>
-          <span class="text-sm text-text-muted">{{ activeZonesCount }} zones active</span>
+          <span class="text-sm text-text-muted">{{ activeZonesCount }} zone{{ activeZonesCount === 1 ? '' : 's' }} active</span>
         </div>
 
         <div v-if="zones.length === 0" class="flex-1 py-8 text-center text-sm text-text-muted">

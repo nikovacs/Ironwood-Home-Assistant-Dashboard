@@ -7,6 +7,10 @@ import { ref, onMounted, shallowRef, type Component } from 'vue'
 import YAML from 'yaml'
 import IconSun from '../components/icons/IconSun.vue'
 import IconCloudSun from '../components/icons/IconCloudSun.vue'
+import IconCloud from '../components/icons/IconCloud.vue'
+import IconCloudRain from '../components/icons/IconCloudRain.vue'
+import IconCloudLightning from '../components/icons/IconCloudLightning.vue'
+import IconSnowflake from '../components/icons/IconSnowflake.vue'
 import IconDroplet from '../components/icons/IconDroplet.vue'
 import IconUV from '../components/icons/IconUV.vue'
 import IconWind from '../components/icons/IconWind.vue'
@@ -46,19 +50,20 @@ interface ForecastResponse {
   longitude?: number
 }
 
-// WMO weather codes → label and icon (IconSun | IconCloudSun | IconDroplet)
+// WMO weather codes → label and icon. See https://open-meteo.com/en/docs#weathervariables
 function wmoToCondition(code: number): { label: string; icon: Component } {
   if (code === 0) return { label: 'Clear', icon: IconSun }
   if (code === 1) return { label: 'Mainly Clear', icon: IconSun }
   if (code === 2) return { label: 'Partly Cloudy', icon: IconCloudSun }
-  if (code === 3) return { label: 'Overcast', icon: IconCloudSun }
-  if (code === 45 || code === 48) return { label: 'Fog', icon: IconCloudSun }
-  if (code >= 51 && code <= 67) return { label: 'Rain', icon: IconDroplet }
-  if (code >= 71 && code <= 77) return { label: 'Snow', icon: IconDroplet }
-  if (code >= 80 && code <= 82) return { label: 'Showers', icon: IconDroplet }
-  if (code >= 85 && code <= 86) return { label: 'Snow Showers', icon: IconDroplet }
-  if (code >= 95 && code <= 99) return { label: 'Thunderstorm', icon: IconDroplet }
-  return { label: 'Unknown', icon: IconCloudSun }
+  if (code === 3) return { label: 'Overcast', icon: IconCloud }
+  if (code === 45 || code === 48) return { label: 'Fog', icon: IconCloud }
+  if (code >= 51 && code <= 57) return { label: 'Drizzle', icon: IconCloudRain }
+  if (code >= 61 && code <= 67) return { label: 'Rain', icon: IconCloudRain }
+  if (code >= 71 && code <= 77) return { label: 'Snow', icon: IconSnowflake }
+  if (code >= 80 && code <= 82) return { label: 'Showers', icon: IconCloudRain }
+  if (code >= 85 && code <= 86) return { label: 'Snow Showers', icon: IconSnowflake }
+  if (code >= 95 && code <= 99) return { label: 'Thunderstorm', icon: IconCloudLightning }
+  return { label: 'Unknown', icon: IconCloud }
 }
 
 // Shared state so all useWeather() callers see the same data
@@ -191,12 +196,32 @@ function applyForecast(data: ForecastResponse, aqi: number | null = null): void 
     usAqi: aqi ?? null,
   }
 
+  const uvVal = current.value.uvIndex != null && Number.isFinite(current.value.uvIndex)
+    ? Math.round(current.value.uvIndex)
+    : null
+  const uvLabel = uvVal != null ? (uvVal <= 2 ? 'Low' : uvVal <= 5 ? 'Mod' : 'High') : null
+  const precipMm = current.value.precip
+  const precipInches = precipMm != null && Number.isFinite(precipMm) ? precipMm / 25.4 : null
+  
+  let precipStr;
+  if (precipInches == null) {
+    precipStr = '—';
+  } else if (precipInches === 0) {
+    precipStr = '0';
+  } else if (precipInches < 0.01) {
+    precipStr = '<0.01';
+  } else {
+    // Round to 2 decimals, then remove trailing zeros
+    const rounded = Math.round(precipInches * 100) / 100;
+    precipStr = rounded.toString();
+  }
+
   const aqiValue = aqi != null && Number.isFinite(aqi)
     ? (aqi >= 1 && aqi <= 5 ? `${aqi} ${owmAqiLabel(aqi)}` : '—')
     : '—'
   details.value = [
-    { icon: IconUV, label: 'UV', value: current.value.uvIndex != null ? `${current.value.uvIndex} ${current.value.uvIndex <= 2 ? 'Low' : current.value.uvIndex <= 5 ? 'Mod' : 'High'}` : '—' },
-    { icon: IconDroplet, label: 'Precip', value: current.value.precip != null ? `${current.value.precip} mm` : '—' },
+    { icon: IconUV, label: 'UV', value: uvVal != null && uvLabel != null ? `${uvVal} ${uvLabel}` : '—' },
+    { icon: IconDroplet, label: 'Precip', value: precipStr === '—' ? '—' : `${precipStr} in` },
     { icon: IconWind, label: 'Wind', value: current.value.windMph != null ? `${Math.round(current.value.windMph)} mph` : '—' },
     { icon: IconLeaf, label: 'AQI', value: aqiValue },
   ]
@@ -217,7 +242,7 @@ function applyForecast(data: ForecastResponse, aqi: number | null = null): void 
     const { icon: dayIcon } = wmoToCondition(code)
     let dayLabel: string
     if (i === 0 || dateStr === today) dayLabel = 'Today'
-    else if (dateStr === tomorrowStr) dayLabel = 'Tomorrow'
+    else if (dateStr === tomorrowStr) dayLabel = 'Tmrw'
     else dayLabel = new Date(dateStr + 'T12:00:00').toLocaleDateString([], { weekday: 'short' })
     const high = d.temperature_2m_max[i]
     const low = d.temperature_2m_min[i]

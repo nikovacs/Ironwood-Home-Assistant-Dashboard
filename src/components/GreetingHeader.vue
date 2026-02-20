@@ -1,37 +1,27 @@
 <script setup lang="ts">
-import type { Component } from 'vue'
+import { computed } from 'vue'
 import { useGreeting } from '../composables/useGreeting'
 import { useTheme } from '../composables/useTheme'
+import { useWeather } from '../composables/useWeather'
 import IconCloudSun from './icons/IconCloudSun.vue'
-import IconSun from './icons/IconSun.vue'
 
 interface Props {
-  weatherTemp?: string
-  weatherIcon?: Component
   hideExtras?: boolean
 }
 
-interface ForecastDay {
-  day: string
-  high: string
-  icon: Component
-}
-
 withDefaults(defineProps<Props>(), {
-  weatherTemp: '72°',
-  weatherIcon: () => IconCloudSun,
   hideExtras: false,
 })
 
 const { greeting, timeString, dateString } = useGreeting()
 useTheme()
+const { current, daily } = useWeather()
 
-const forecast: ForecastDay[] = [
-  { day: 'Today', high: '72°', icon: IconCloudSun },
-  { day: 'Mon',   high: '68°', icon: IconCloudSun },
-  { day: 'Tue',   high: '75°', icon: IconSun },
-  { day: 'Wed',   high: '70°', icon: IconCloudSun },
-]
+const forecast = computed(() =>
+  daily.value.length > 0
+    ? daily.value.slice(0, 4).map((d) => ({ day: d.day, high: d.high, icon: d.icon }))
+    : []
+)
 </script>
 
 <template>
@@ -54,8 +44,8 @@ const forecast: ForecastDay[] = [
       <div class="header-slot flex justify-end">
         <Transition name="header-extra">
           <div v-if="!hideExtras" class="flex items-center gap-2">
-            <component :is="weatherIcon" class="h-8 w-8 text-text-primary" />
-            <span class="text-3xl font-light text-text-primary">{{ weatherTemp }}</span>
+            <component :is="current?.icon ?? IconCloudSun" class="h-8 w-8 text-text-primary" />
+            <span class="text-3xl font-light text-text-primary">{{ current?.tempFormatted ?? '—' }}</span>
           </div>
         </Transition>
       </div>
@@ -63,7 +53,7 @@ const forecast: ForecastDay[] = [
 
     <!-- Mini forecast -->
     <Transition name="forecast">
-      <div v-if="!hideExtras" class="forecast-mobile-hide mt-3 flex justify-center gap-6">
+      <div v-if="!hideExtras && forecast.length > 0" class="forecast-mobile-hide mt-3 flex justify-center gap-6">
         <div
           v-for="day in forecast"
           :key="day.day"

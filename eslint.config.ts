@@ -59,6 +59,7 @@ export default defineConfig([
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
       // script setup vars are used in templates — ESLint can't see that
       'no-useless-assignment': 'off',
+      'curly': 'off',
     },
   },
 

@@ -58,6 +58,32 @@ If the config file cannot be loaded (e.g. wrong path), the panel uses **dummy zo
 - **Standalone** (app served at its own URL): `public/` is the doc root, so `fetch('/climate-zones.yaml')` works.
 - **Served by HA** (e.g. from `config/www/`): Put the file in `config/www/` and use path `/local/climate-zones.yaml` in the app (requires changing the fetch URL in the code to `/local/climate-zones.yaml`).
 
+## Weather
+
+The header and bottom weather/clock card show **live weather** from [Open-Meteo](https://open-meteo.com/) (free, no API key). Location is set via a YAML config so the dashboard can run without Home Assistant weather entities.
+
+### Config
+
+Place **weather.yaml** in `public/` (same place as `climate-zones.yaml`):
+
+```yaml
+# Required: latitude and longitude of your location
+latitude: 40.6782
+longitude: -75.4992
+
+# Optional: refresh interval in minutes (default: 15). Open-Meteo allows 10k requests/day.
+# update_interval_minutes: 15
+
+# Optional: OpenWeatherMap API key for AQI. Prefer .env (see below); if omitted everywhere, AQI shows "—".
+# openweathermap_api_key: "your-api-key"
+```
+
+- **latitude** / **longitude** — Required. Coordinates for weather and AQI.
+- **update_interval_minutes** — How often to refetch. Default 15 minutes (96 requests/day, well under the 10k/day limit for 24/7 use).
+- **openweathermap_api_key** — Optional. When set (here or via env), AQI is fetched from [OpenWeatherMap Air Pollution API](https://openweathermap.org/api/air-pollution) (free tier: 1000 calls/day). Display uses their scale 1–5 (Good, Fair, Moderate, Poor, Very Poor). For security (e.g. when committing to GitHub), prefer setting **`VITE_OPENWEATHERMAP_API_KEY`** in a `.env` file (and add `.env` to `.gitignore`); the app uses the env value if the key is not in the YAML.
+
+If the file is missing or invalid, the UI shows a short error or “—” until the config is fixed.
+
 ---
 
 This template uses Vue 3 `<script setup>` SFCs; see the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup). Learn more in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).

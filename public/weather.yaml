@@ -1,0 +1,15 @@
+# Weather panel config: location and refresh interval.
+# Used to fetch real weather from Open-Meteo (free, no API key).
+
+# Required: latitude and longitude of your location.
+latitude: 40.6782
+longitude: -75.4992
+
+# Optional: how often to refresh weather (minutes). Default 15.
+# Open-Meteo free tier allows 10,000 requests/day; 15 min = 96/day.
+# update_interval_minutes: 15
+
+# Optional: OpenWeatherMap API key for AQI (air quality index).
+# Prefer setting VITE_OPENWEATHERMAP_API_KEY in .env (not committed) for security.
+# If unset here and in .env, AQI will show "—".
+# openweathermap_api_key: "your-api-key"

@@ -1,8 +1,0 @@
-{
-  "zones": [
-    { "entity_id": "climate.living_room", "name": "Living Room" },
-    { "entity_id": "climate.bedroom", "name": "Bedroom" },
-    { "entity_id": "climate.office", "name": "Office" },
-    { "entity_id": "climate.guest_room", "name": "Guest Room" }
-  ]
-}

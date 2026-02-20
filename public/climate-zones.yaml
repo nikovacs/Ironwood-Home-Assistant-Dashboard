@@ -1,6 +1,8 @@
-# Climate zones for the dashboard (Venstar / Home Assistant).
-# List up to 4 climate entity_ids. Optional "name" overrides HA friendly name.
-# Entity IDs match your HA climate entities (e.g. from Venstar HACS integration).
+# Climate panel config: zones and optional test/example data (same file).
+# Zones: up to 4 climate entity_ids. Optional "name" overrides HA friendly name.
+# Entities: optional; use as example and as fallback when HA entity is missing (e.g. offline).
+# Entity IDs under "entities" should match your zone entity_ids.
+
 zones:
   - entity_id: climate.living_room
     name: Living Room
@@ -10,3 +12,49 @@ zones:
     name: Office
   - entity_id: climate.guest_room
     name: Guest Room
+
+# Example/test data: mirrors HA climate state and attributes. Omit when using real HA only.
+entities:
+  climate.living_room:
+    state: cool
+    attributes:
+      current_temperature: 72
+      temperature: 73
+      hvac_modes: [heat, cool, off, auto]
+      min_temp: 50
+      max_temp: 90
+      target_temp_step: 1
+      friendly_name: Living Room
+
+  climate.bedroom:
+    state: heat
+    attributes:
+      current_temperature: 68
+      temperature: 67
+      hvac_modes: [heat, cool, off]
+      min_temp: 50
+      max_temp: 90
+      target_temp_step: 1
+      friendly_name: Bedroom
+
+  climate.office:
+    state: off
+    attributes:
+      current_temperature: 71
+      temperature: 72
+      hvac_modes: [heat, cool, off, auto]
+      min_temp: 55
+      max_temp: 85
+      target_temp_step: 1
+      friendly_name: Office
+
+  climate.guest_room:
+    state: auto
+    attributes:
+      current_temperature: 70
+      temperature: 70
+      hvac_modes: [heat, cool, off, auto]
+      min_temp: 50
+      max_temp: 90
+      target_temp_step: 1
+      friendly_name: Guest Room

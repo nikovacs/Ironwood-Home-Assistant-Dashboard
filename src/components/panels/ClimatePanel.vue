@@ -15,17 +15,15 @@ interface ZoneConfig {
   name?: string
 }
 
-interface ZoneConfigFile {
-  zones: ZoneConfig[]
-}
-
-/** Test entity shape (standalone YAML); mirrors HA entity for fallback. */
+/** Test entity shape (in YAML); mirrors HA entity for fallback when HA is missing. */
 interface TestEntity {
   state: string
   attributes: Record<string, unknown>
 }
 
-interface ClimateTestDataFile {
+/** Single config file: zones and optional entities (example/test data). */
+interface ClimateConfigFile {
+  zones?: ZoneConfig[]
   entities?: Record<string, TestEntity>
 }
 
@@ -117,34 +115,20 @@ function setTemperature(entityId: string, temperature: number): void {
 }
 
 onMounted(async () => {
-  let list: ZoneConfig[] = []
   try {
-    const yamlRes = await fetch('/climate-zones.yaml')
-    if (yamlRes.ok) {
-      const text = await yamlRes.text()
-      const data = YAML.parse(text) as ZoneConfigFile
-      list = Array.isArray(data?.zones) ? data.zones : []
+    const res = await fetch('/climate-zones.yaml')
+    if (res.ok) {
+      const text = await res.text()
+      const data = YAML.parse(text) as ClimateConfigFile
+      const list = Array.isArray(data?.zones) ? data.zones : []
+      zonesConfig.value = list.length > 0 ? list.slice(0, MAX_ZONES) : DUMMY_ZONES
+      testEntityData.value = data?.entities ?? {}
+    } else {
+      zonesConfig.value = DUMMY_ZONES
+      testEntityData.value = {}
     }
-    if (list.length === 0) {
-      const jsonRes = await fetch('/climate-zones.json')
-      if (jsonRes.ok) {
-        const data = (await jsonRes.json()) as ZoneConfigFile
-        list = Array.isArray(data.zones) ? data.zones : []
-      }
-    }
-    zonesConfig.value = list.length > 0 ? list.slice(0, MAX_ZONES) : DUMMY_ZONES
   } catch {
     zonesConfig.value = DUMMY_ZONES
-  }
-
-  try {
-    const testRes = await fetch('/climate-test-data.yaml')
-    if (testRes.ok) {
-      const text = await testRes.text()
-      const data = YAML.parse(text) as ClimateTestDataFile
-      testEntityData.value = data?.entities ?? {}
-    }
-  } catch {
     testEntityData.value = {}
   }
 })
@@ -166,7 +150,7 @@ onMounted(async () => {
 
         <div v-if="zones.length === 0" class="flex-1 py-8 text-center text-sm text-text-muted">
           <p>No zones configured.</p>
-          <p class="mt-1 text-xs">Add up to 4 climate entity_ids in <code class="rounded bg-surface-card px-1">public/climate-zones.yaml</code> (or <code class="rounded bg-surface-card px-1">.json</code>) to match your Venstar/HA setup.</p>
+          <p class="mt-1 text-xs">Add <code class="rounded bg-surface-card px-1">public/climate-zones.yaml</code> with a <code class="rounded bg-surface-card px-1">zones</code> list (and optional <code class="rounded bg-surface-card px-1">entities</code> for example/test data) to match your Venstar/HA setup.</p>
         </div>
 
         <div v-else class="flex min-h-0 flex-1 flex-col overflow-auto py-1 sm:items-center sm:justify-center sm:overflow-hidden">

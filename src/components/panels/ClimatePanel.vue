@@ -8,6 +8,7 @@ import IconBed from '../icons/IconBed.vue'
 import IconMonitor from '../icons/IconMonitor.vue'
 import IconHome from '../icons/IconHome.vue'
 import IconChevronLeft from '../icons/IconChevronLeft.vue'
+import ClimateTemperatureArc from '../ClimateTemperatureArc.vue'
 
 interface ZoneConfig {
   entity_id: string
@@ -135,6 +136,13 @@ function setTemperature(entityId: string, temperature: number): void {
   hassService('climate', 'set_temperature', { entity_id: entityId, temperature })
 }
 
+function onTemperatureChange(temp: number): void {
+  if (!selectedZone.value) {
+    return
+  }
+  setTemperature(selectedZone.value.entity_id, temp)
+}
+
 onMounted(async () => {
   let list: ZoneConfig[] = []
   try {
@@ -237,7 +245,7 @@ onMounted(async () => {
         key="detail"
         class="climate-view-root flex flex-col h-full min-h-0"
       >
-        <div class="flex items-center gap-3 pb-4 shrink-0">
+        <div class="flex shrink-0 items-center gap-3 pb-2">
           <button
             type="button"
             class="flex items-center justify-center rounded-xl p-2 -ml-2 text-text-secondary hover:bg-surface-card hover:text-text-primary transition-colors"
@@ -249,66 +257,49 @@ onMounted(async () => {
           <h2 class="text-lg font-semibold text-text-primary truncate">{{ selectedZone.name }}</h2>
         </div>
 
-        <div class="space-y-6 flex-1 overflow-auto">
-          <!-- Current / target summary -->
-          <div class="rounded-2xl border border-border-subtle bg-surface-card p-5">
-            <div class="flex justify-between items-baseline">
-              <span class="text-sm text-text-secondary">Current</span>
-              <span class="text-2xl font-semibold text-text-primary">
+        <div class="flex min-h-0 flex-1 flex-col items-center justify-center overflow-auto px-4 py-4">
+          <!-- Current / target readout -->
+          <div class="mb-4 flex shrink-0 gap-8 text-center">
+            <div>
+              <p class="text-xs text-text-muted uppercase tracking-wide">Current</p>
+              <p class="text-2xl font-semibold text-text-primary">
                 {{ selectedZone.currentTemp !== null ? `${selectedZone.currentTemp}°` : '—' }}
-              </span>
+              </p>
             </div>
-            <div class="flex justify-between items-baseline mt-2">
-              <span class="text-sm text-text-secondary">Target</span>
-              <span class="text-xl font-medium text-cat-climate">
+            <div>
+              <p class="text-xs text-text-muted uppercase tracking-wide">Target</p>
+              <p class="text-2xl font-semibold text-cat-climate">
                 {{ selectedZone.targetTemp !== null ? `${selectedZone.targetTemp}°` : '—' }}
-              </span>
+              </p>
             </div>
           </div>
 
-          <!-- Target temperature control -->
-          <div>
-            <p class="text-xs text-text-muted uppercase tracking-wide mb-2">Set temperature</p>
-            <div class="flex items-center gap-4">
-              <button
-                type="button"
-                class="rounded-xl border border-border-subtle bg-surface-card p-3 text-text-primary disabled:opacity-50"
-                :disabled="selectedZone.targetTemp === null || selectedZone.targetTemp <= selectedZone.min_temp"
-                @click="setTemperature(selectedZone.entity_id, Math.max(selectedZone.min_temp, (selectedZone.targetTemp ?? selectedZone.min_temp) - selectedZone.temperature_step))"
-              >
-                −
-              </button>
-              <span class="text-xl font-semibold text-text-primary min-w-[3rem] text-center">
-                {{ selectedZone.targetTemp ?? '—' }}°
-              </span>
-              <button
-                type="button"
-                class="rounded-xl border border-border-subtle bg-surface-card p-3 text-text-primary disabled:opacity-50"
-                :disabled="selectedZone.targetTemp === null || selectedZone.targetTemp >= selectedZone.max_temp"
-                @click="setTemperature(selectedZone.entity_id, Math.min(selectedZone.max_temp, (selectedZone.targetTemp ?? selectedZone.min_temp) + selectedZone.temperature_step))"
-              >
-                +
-              </button>
-            </div>
-          </div>
+          <!-- Arc temperature control (standalone component; stops pointer propagation) -->
+          <ClimateTemperatureArc
+            :model-value="selectedZone.targetTemp"
+            :min="selectedZone.min_temp"
+            :max="selectedZone.max_temp"
+            :step="selectedZone.temperature_step"
+            :mode="selectedZone.mode"
+            @update:model-value="onTemperatureChange"
+          />
+
+          <p class="mt-3 text-xs text-text-muted">Drag to set temperature</p>
 
           <!-- HVAC mode -->
-          <div>
-            <p class="text-xs text-text-muted uppercase tracking-wide mb-2">Mode</p>
-            <div class="flex flex-wrap gap-2">
-              <button
-                v-for="mode in selectedZone.hvac_modes"
-                :key="mode"
-                type="button"
-                class="rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
-                :class="selectedZone.mode === mode
-                  ? (modeStyle[mode] ?? 'bg-cat-climate-soft text-cat-climate')
-                  : 'bg-surface-card border border-border-subtle text-text-secondary hover:border-border-subtle hover:text-text-primary'"
-                @click="setHvacMode(selectedZone.entity_id, mode)"
-              >
-                {{ modeLabel[mode] ?? mode }}
-              </button>
-            </div>
+          <div class="mt-6 flex shrink-0 flex-wrap justify-center gap-2">
+            <button
+              v-for="mode in selectedZone.hvac_modes"
+              :key="mode"
+              type="button"
+              class="rounded-xl px-4 py-2.5 text-sm font-medium transition-colors"
+              :class="selectedZone.mode === mode
+                ? (modeStyle[mode] ?? 'bg-cat-climate-soft text-cat-climate')
+                : 'bg-surface-card border border-border-subtle text-text-secondary hover:border-border-subtle hover:text-text-primary'"
+              @click="setHvacMode(selectedZone.entity_id, mode)"
+            >
+              {{ modeLabel[mode] ?? mode }}
+            </button>
           </div>
         </div>
       </div>

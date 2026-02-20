@@ -100,6 +100,15 @@ function onTouchStart(e: TouchEvent): void {
   canDismiss = !el || el.scrollTop <= 0
 }
 
+/** Touch start on the drag handle — always allow dismiss from the handle */
+function onHandleTouchStart(e: TouchEvent): void {
+  if (!isExpanded.value) { return }
+  canDismiss = true
+  touchStartY = e.touches[0].clientY
+  touchStartTime = Date.now()
+  dragOffset.value = 0
+}
+
 function onTouchMove(e: TouchEvent): void {
   const dy = e.touches[0].clientY - touchStartY
   if (canDismiss && dy > 0) {
@@ -120,6 +129,41 @@ function onTouchEnd(): void {
   const elapsed = Date.now() - touchStartTime
   const velocity = dragOffset.value / elapsed
   /* Dismiss if dragged far enough or flicked fast */
+  if (dragOffset.value > 80 || velocity > 0.5) {
+    activeCategory.value = null
+  }
+  dragOffset.value = 0
+}
+
+/* Pointer (mouse) drag on handle to dismiss */
+function onHandlePointerDown(e: PointerEvent): void {
+  if (!isExpanded.value || e.button !== 0) { return }
+  canDismiss = true
+  touchStartY = e.clientY
+  touchStartTime = Date.now()
+  dragOffset.value = 0
+  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+}
+
+function onHandlePointerMove(e: PointerEvent): void {
+  if ((e.currentTarget as HTMLElement).hasPointerCapture(e.pointerId)) {
+    const dy = e.clientY - touchStartY
+    if (dy > 0) {
+      isDragging.value = true
+      dragOffset.value = dy
+    }
+  }
+}
+
+function onHandlePointerUp(e: PointerEvent): void {
+  const el = e.currentTarget as HTMLElement
+  if (el.hasPointerCapture(e.pointerId)) {
+    el.releasePointerCapture(e.pointerId)
+  }
+  if (!isDragging.value) { return }
+  isDragging.value = false
+  const elapsed = Date.now() - touchStartTime
+  const velocity = dragOffset.value / Math.max(elapsed, 1)
   if (dragOffset.value > 80 || velocity > 0.5) {
     activeCategory.value = null
   }
@@ -185,10 +229,17 @@ function onTouchEnd(): void {
       ]"
       :style="dragOffset > 0 ? { transform: `translateY(${String(dragOffset)}px)`, opacity: String(1 - dragOffset / 300) } : undefined"
     >
-      <!-- Drag handle -->
+      <!-- Drag handle: touch or mouse drag down to close panel -->
       <div
         v-if="isExpanded"
-        class="flex justify-center pt-3 pb-1 cursor-grab"
+        class="flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing touch-none"
+        @touchstart.passive="onHandleTouchStart"
+        @touchmove="onTouchMove"
+        @touchend="onTouchEnd"
+        @pointerdown="onHandlePointerDown"
+        @pointermove="onHandlePointerMove"
+        @pointerup="onHandlePointerUp"
+        @pointercancel="onHandlePointerUp"
       >
         <div class="h-1 w-10 rounded-full bg-border-subtle" />
       </div>

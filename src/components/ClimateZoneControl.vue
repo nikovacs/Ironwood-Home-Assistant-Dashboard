@@ -112,7 +112,7 @@ function blurAfterDelay(el: EventTarget | null): void {
 
 <template>
   <div class="climate-zone-control-root flex flex-col h-full min-h-0">
-    <div class="flex shrink-0 items-center gap-3 pb-3">
+    <div class="flex shrink-0 items-center gap-3">
       <button
         type="button"
         class="flex items-center justify-center rounded-xl p-2.5 -ml-2 text-text-secondary hover:bg-surface-card hover:text-text-primary transition-colors"
@@ -124,10 +124,10 @@ function blurAfterDelay(el: EventTarget | null): void {
       <h2 class="text-xl font-semibold text-text-primary truncate">{{ props.zone.name }}</h2>
     </div>
 
-    <div class="climate-detail-scroll flex min-h-0 flex-1 flex-col items-center overflow-x-hidden px-5 py-4">
-      <div class="climate-detail-readout flex shrink-0 justify-center text-center">
+    <div class="climate-detail-scroll flex min-h-0 flex-1 flex-col items-center overflow-x-hidden ">
+      <div class="climate-detail-readout flex shrink-0 justify-center text-center -mb-8 sm:-mb-0">
         <div>
-          <p class="text-sm text-text-muted uppercase tracking-wide">Current</p>
+          <p class="text-sm text-text-muted uppercase tracking-wide pt-4 sm:pt-0">Current</p>
           <p class="relative inline-block text-3xl font-bold text-text-primary tabular-nums sm:text-4xl md:text-5xl">
             <template v-if="props.zone.currentTemp !== null">
               <span>{{ props.zone.currentTemp }}</span>
@@ -138,7 +138,7 @@ function blurAfterDelay(el: EventTarget | null): void {
         </div>
       </div>
 
-      <div class="climate-arc-wrapper flex min-h-0 flex-1 items-center justify-center">
+      <div class="climate-arc-wrapper -mb-10 flex min-h-0 flex-1 items-center justify-center">
         <div class="climate-arc-slot min-h-0 w-full max-w-full flex-1 relative">
           <ClimateTemperatureArc
             :model-value="props.zone.targetTemp"
@@ -154,7 +154,7 @@ function blurAfterDelay(el: EventTarget | null): void {
             aria-hidden="true"
           >
             <span
-              class="relative inline-block text-4xl font-bold tabular-nums sm:text-5xl md:text-6xl"
+              class="relative inline-block text-8xl font-bold tabular-nums"
               :class="modeTargetTempClass[props.zone.mode] ?? 'text-text-muted'"
             >
               <template v-if="props.zone.targetTemp !== null">
@@ -167,12 +167,12 @@ function blurAfterDelay(el: EventTarget | null): void {
         </div>
       </div>
 
-      <!-- Fine-tune buttons directly below the arc -->
-      <div class="climate-arc-step-buttons mt-0.5 flex shrink-0 items-center justify-center gap-4 sm:mt-1">
+      <!-- Fine-tune buttons directly below the arc (z-10 so they stay clickable when arc overlaps) -->
+      <div class="climate-arc-step-buttons relative z-10 -mt-8 flex shrink-0 items-center justify-center gap-4 sm:-mt-3">
         <button
           type="button"
           class="flex h-12 w-12 items-center justify-center rounded-full border-2 border-border-subtle bg-surface-card text-text-primary transition-colors hover:border-text-secondary hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:hover:border-border-subtle disabled:hover:bg-surface-card sm:h-14 sm:w-14"
-          :style="{ '--tw-ring-color': minusRingColor }"
+          :style="{ '--tw-ring-color': minusRingColor, '--tw-ring-offset-color': 'var(--color-surface-primary)' }"
           :disabled="props.zone.targetTemp !== null && props.zone.targetTemp <= props.zone.min_temp"
           aria-label="Decrease temperature"
           @click="(e) => { stepDown(); blurAfterDelay(e.currentTarget) }"
@@ -182,7 +182,7 @@ function blurAfterDelay(el: EventTarget | null): void {
         <button
           type="button"
           class="flex h-12 w-12 items-center justify-center rounded-full border-2 border-border-subtle bg-surface-card text-text-primary transition-colors hover:border-text-secondary hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:hover:border-border-subtle disabled:hover:bg-surface-card sm:h-14 sm:w-14"
-          :style="{ '--tw-ring-color': plusRingColor }"
+          :style="{ '--tw-ring-color': plusRingColor, '--tw-ring-offset-color': 'var(--color-surface-primary)' }"
           :disabled="props.zone.targetTemp !== null && props.zone.targetTemp >= props.zone.max_temp"
           aria-label="Increase temperature"
           @click="(e) => { stepUp(); blurAfterDelay(e.currentTarget) }"
@@ -193,7 +193,7 @@ function blurAfterDelay(el: EventTarget | null): void {
 
       <p class="mt-2 shrink-0 text-sm text-text-muted sm:mt-4">Drag arc or use buttons to set temperature</p>
 
-      <div class="climate-detail-modes mt-4 flex shrink-0 flex-wrap justify-center gap-3 sm:mt-8">
+      <div class="climate-detail-modes mt-4 flex shrink-0 flex-wrap justify-center gap-3 sm:mt-4">
         <button
           v-for="mode in props.zone.hvac_modes"
           :key="mode"
@@ -224,6 +224,8 @@ function blurAfterDelay(el: EventTarget | null): void {
   display: none;
 }
 .climate-arc-wrapper {
+  position: relative;
+  z-index: 0;
   align-self: stretch;
   min-width: 0;
 }

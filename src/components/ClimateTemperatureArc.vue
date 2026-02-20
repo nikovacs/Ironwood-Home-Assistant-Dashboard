@@ -230,8 +230,7 @@ const gradientLine = computed(() => {
 <template>
   <div
     ref="containerRef"
-    class="relative touch-none select-none cursor-grab active:cursor-grabbing"
-    style="width: min(80vw, 280px); height: min(80vw, 280px);"
+    class="climate-arc-root relative size-full touch-none select-none cursor-grab active:cursor-grabbing"
     @pointerdown="handlePointerDown"
     @pointermove="handlePointerMove"
     @pointerup="handlePointerUp"
@@ -311,3 +310,12 @@ const gradientLine = computed(() => {
     </svg>
   </div>
 </template>
+
+<style scoped>
+.climate-arc-root {
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+}
+</style>

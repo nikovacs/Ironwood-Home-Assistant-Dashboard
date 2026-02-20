@@ -15,9 +15,9 @@ interface ZoneConfig {
   name?: string
 }
 
-/** Test entity shape (in YAML); mirrors HA entity for fallback when HA is missing. */
+/** Entity shape in YAML: static config only (state/temps come from HA at runtime). */
 interface TestEntity {
-  state: string
+  state?: string
   attributes: Record<string, unknown>
 }
 

@@ -170,63 +170,73 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full min-h-0">
-    <!-- Zone list (readonly): up to 4 zones; tap to pane into full view -->
-    <template v-if="!selectedZoneEntityId">
-      <div class="flex shrink-0 items-center justify-between">
-        <h2 class="text-lg font-semibold text-text-primary">Climate</h2>
-        <span class="text-xs text-text-muted">{{ activeZonesCount }} zones active</span>
-      </div>
+  <div class="climate-panel-root flex flex-col h-full min-h-0">
+    <Transition name="climate-view" mode="out-in">
+      <!-- Zone list (readonly): up to 4 zones; tap to pane into full view -->
+      <div
+        v-if="!selectedZoneEntityId"
+        key="list"
+        class="climate-view-root flex flex-col h-full min-h-0"
+      >
+        <div class="flex shrink-0 items-center justify-between">
+          <h2 class="text-lg font-semibold text-text-primary">Climate</h2>
+          <span class="text-xs text-text-muted">{{ activeZonesCount }} zones active</span>
+        </div>
 
-      <div v-if="zones.length === 0" class="flex-1 py-8 text-center text-sm text-text-muted">
-        <p>No zones configured.</p>
-        <p class="mt-1 text-xs">Add up to 4 climate entity_ids in <code class="rounded bg-surface-card px-1">public/climate-zones.yaml</code> (or <code class="rounded bg-surface-card px-1">.json</code>) to match your Venstar/HA setup.</p>
-      </div>
+        <div v-if="zones.length === 0" class="flex-1 py-8 text-center text-sm text-text-muted">
+          <p>No zones configured.</p>
+          <p class="mt-1 text-xs">Add up to 4 climate entity_ids in <code class="rounded bg-surface-card px-1">public/climate-zones.yaml</code> (or <code class="rounded bg-surface-card px-1">.json</code>) to match your Venstar/HA setup.</p>
+        </div>
 
-      <div v-else class="flex min-h-0 flex-1 items-center justify-center overflow-hidden">
-        <div class="grid w-full max-h-full aspect-square grid-cols-2 grid-rows-2 gap-3" style="grid-template-rows: repeat(2, minmax(0, 1fr));">
-          <button
-            v-for="zone in zones"
-            :key="zone.entity_id"
-            type="button"
-            class="flex flex-col items-center justify-center gap-1.5 rounded-2xl border p-3 transition-all duration-200 active:scale-[0.98] cursor-pointer text-center min-h-0 min-w-0"
-            :class="zone.mode !== 'off' && zone.available
-              ? 'bg-cat-climate-soft border-cat-climate/30'
-              : 'bg-surface-card border-border-subtle'"
-            :disabled="!zone.available"
-            @click="zone.available && selectZone(zone.entity_id)"
-          >
-            <component
-              :is="zone.icon"
-              class="h-8 w-8 shrink-0"
-              :class="zone.mode !== 'off' && zone.available ? 'text-cat-climate' : 'text-text-secondary'"
-            />
-            <p class="text-sm font-medium text-text-primary truncate w-full">{{ zone.name }}</p>
-            <p class="text-xs text-text-secondary">
-              <template v-if="zone.available">
-                <template v-if="zone.currentTemp !== null">{{ zone.currentTemp }}°</template>
-                <template v-else>—</template>
-                →
-                <template v-if="zone.targetTemp !== null">{{ zone.targetTemp }}°</template>
-                <template v-else>—</template>
-              </template>
-              <template v-else>Unavailable</template>
-            </p>
-            <span
-              v-if="zone.available"
-              class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
-              :class="modeStyle[zone.mode] ?? modeStyle.off"
+        <div v-else class="flex min-h-0 flex-1 flex-col overflow-auto py-1 sm:items-center sm:justify-center sm:overflow-hidden">
+          <div class="flex min-h-0 w-full flex-1 flex-col gap-3 sm:flex-initial sm:grid sm:max-h-full sm:w-full sm:aspect-square sm:grid-cols-2 sm:grid-rows-2 sm:gap-3" style="grid-template-rows: repeat(2, minmax(0, 1fr));">
+            <button
+              v-for="zone in zones"
+              :key="zone.entity_id"
+              type="button"
+              class="climate-zone-card flex min-h-[4.5rem] min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-2xl border p-3 text-left transition-all duration-200 active:scale-[0.98] sm:min-h-0 sm:flex-1 sm:flex-col sm:justify-center sm:text-center"
+              :class="zone.mode !== 'off' && zone.available
+                ? 'bg-cat-climate-soft border-cat-climate/30'
+                : 'bg-surface-card border-border-subtle'"
+              :disabled="!zone.available"
+              @click="zone.available && selectZone(zone.entity_id)"
             >
-              {{ modeLabel[zone.mode] ?? zone.mode }}
-            </span>
-          </button>
+              <component
+                :is="zone.icon"
+                class="h-8 w-8 shrink-0 sm:h-8 sm:w-8"
+                :class="zone.mode !== 'off' && zone.available ? 'text-cat-climate' : 'text-text-secondary'"
+              />
+              <div class="min-w-0 flex-1 sm:w-full sm:flex-initial sm:text-center">
+                <p class="text-sm font-medium text-text-primary truncate">{{ zone.name }}</p>
+                <p class="text-xs text-text-secondary">
+                  <template v-if="zone.available">
+                    <template v-if="zone.currentTemp !== null">{{ zone.currentTemp }}°</template>
+                    <template v-else>—</template>
+                    →
+                    <template v-if="zone.targetTemp !== null">{{ zone.targetTemp }}°</template>
+                    <template v-else>—</template>
+                  </template>
+                  <template v-else>Unavailable</template>
+                </p>
+              </div>
+              <span
+                v-if="zone.available"
+                class="inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium"
+                :class="modeStyle[zone.mode] ?? modeStyle.off"
+              >
+                {{ modeLabel[zone.mode] ?? 'Off' }}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
-    </template>
 
-    <!-- Paned: single zone full-view with fine-tuned controls -->
-    <template v-else-if="selectedZone">
-      <div class="flex flex-col h-full min-h-0">
+      <!-- Paned: single zone full-view with fine-tuned controls -->
+      <div
+        v-else-if="selectedZone"
+        key="detail"
+        class="climate-view-root flex flex-col h-full min-h-0"
+      >
         <div class="flex items-center gap-3 pb-4 shrink-0">
           <button
             type="button"
@@ -302,6 +312,34 @@ onMounted(async () => {
           </div>
         </div>
       </div>
-    </template>
+    </Transition>
   </div>
 </template>
+
+<style scoped>
+.climate-panel-root {
+  position: relative;
+}
+.climate-view-root {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.climate-view-enter-active,
+.climate-view-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.climate-view-enter-from,
+.climate-view-leave-to {
+  opacity: 0;
+  transform: translateY(0.5rem);
+}
+.climate-view-enter-to,
+.climate-view-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>

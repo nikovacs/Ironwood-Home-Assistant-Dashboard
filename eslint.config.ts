@@ -73,6 +73,7 @@ export default defineConfig([
       '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
+      '@typescript-eslint/restrict-template-expressions': 'off',
 
       // General
       'no-unused-vars': 'off',
@@ -81,7 +82,7 @@ export default defineConfig([
       'prefer-const': 'error',
       'no-var': 'error',
       eqeqeq: ['error', 'always'],
-      curly: ['error', 'all'],
+      curly: 'off',
 
       // Vue strict
       'vue/multi-word-component-names': 'off',

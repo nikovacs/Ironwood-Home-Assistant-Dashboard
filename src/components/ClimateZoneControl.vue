@@ -9,7 +9,9 @@ export interface ClimateZoneControlData {
   currentTemp: number | null
   targetTemp: number | null
   mode: string
+  fan_mode: string
   hvac_modes: string[]
+  fan_modes: string[]
   min_temp: number
   max_temp: number
   temperature_step: number
@@ -23,6 +25,7 @@ const emit = defineEmits<{
   back: []
   'update:temperature': [value: number]
   'update:hvacMode': [value: string]
+  'update:fanMode': [value: string]
 }>()
 
 const modeLabel: Record<string, string> = {
@@ -205,6 +208,22 @@ function blurAfterDelay(el: EventTarget | null): void {
           @click="emit('update:hvacMode', mode)"
         >
           {{ modeLabel[mode] ?? mode }}
+        </button>
+      </div>
+
+      <div v-if="props.zone.fan_modes.length > 0" class="climate-detail-fan mt-3 flex shrink-0 flex-wrap justify-center gap-2 sm:mt-4">
+        <span class="w-full text-center text-sm text-text-muted">Fan</span>
+        <button
+          v-for="fm in props.zone.fan_modes"
+          :key="fm"
+          type="button"
+          class="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          :class="props.zone.fan_mode === fm
+            ? 'bg-surface-card border-2 border-border-active text-text-primary'
+            : 'bg-surface-card border border-border-subtle text-text-secondary hover:border-border-subtle hover:text-text-primary'"
+          @click="emit('update:fanMode', fm)"
+        >
+          {{ fm === 'on' ? 'On' : 'Auto' }}
         </button>
       </div>
     </div>

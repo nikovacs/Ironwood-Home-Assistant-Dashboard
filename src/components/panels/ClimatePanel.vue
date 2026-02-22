@@ -41,8 +41,8 @@ const DUMMY_ZONES: ZoneConfig[] = [
 const zonesConfig = shallowRef<ZoneConfig[]>([])
 const selectedZoneEntityId = ref<string | null>(null)
 const testEntityData = shallowRef<Record<string, TestEntity>>({})
-/** When using test data, local overrides so temp/mode changes update the UI. */
-const testDataOverrides = ref<Record<string, { temperature?: number, hvac_mode?: string }>>({})
+/** When using test data, local overrides so temp/mode/fan changes update the UI. */
+const testDataOverrides = ref<Record<string, { temperature?: number, hvac_mode?: string, fan_mode?: string }>>({})
 
 const { entities, hassService } = useHass()
 
@@ -59,6 +59,8 @@ const zones = computed(() => {
     const currentTemp = attrs.current_temperature ?? null
     const targetTemp = (override?.temperature !== undefined ? override.temperature : attrs.temperature) ?? null
     const hvacMode = (state === 'unavailable' ? 'off' : state) as 'heat' | 'cool' | 'off' | 'auto' | 'heat_cool' | 'dry' | 'fan_only'
+    const overrideFan = overrides[zc.entity_id]?.fan_mode
+    const fanMode = (overrideFan ?? attrs.fan_mode ?? 'auto') as string
     const name = zc.name ?? attrs.friendly_name ?? zc.entity_id
     return {
       entity_id: zc.entity_id,
@@ -67,8 +69,10 @@ const zones = computed(() => {
       currentTemp: currentTemp !== null ? Math.round(Number(currentTemp)) : null,
       targetTemp: targetTemp !== null ? Math.round(Number(targetTemp)) : null,
       mode: hvacMode,
+      fan_mode: fanMode,
       available: entity !== null,
       hvac_modes: (attrs.hvac_modes as string[] | undefined) ?? ['heat', 'cool', 'off'],
+      fan_modes: (attrs.fan_modes as string[] | undefined) ?? ['auto', 'on'],
       min_temp: attrs.min_temp !== null ? Number(attrs.min_temp) : 50,
       max_temp: attrs.max_temp !== null ? Number(attrs.max_temp) : 90,
       temperature_step: attrs.target_temp_step !== null ? Number(attrs.target_temp_step) : 1,
@@ -114,9 +118,19 @@ function setTemperature(entityId: string, temperature: number): void {
   hassService('climate', 'set_temperature', { entity_id: entityId, temperature })
 }
 
+function setFanMode(entityId: string, fanMode: string): void {
+  if (testEntityData.value[entityId] !== undefined && entities.value[entityId] === undefined) {
+    testDataOverrides.value = {
+      ...testDataOverrides.value,
+      [entityId]: { ...testDataOverrides.value[entityId], fan_mode: fanMode },
+    }
+  }
+  hassService('climate', 'set_fan_mode', { entity_id: entityId, fan_mode: fanMode })
+}
+
 onMounted(async () => {
   try {
-    const res = await fetch('/climate-zones.yaml')
+    const res = await fetch(`${import.meta.env.BASE_URL}climate-zones.yaml`)
     if (res.ok) {
       const text = await res.text()
       const data = YAML.parse(text) as ClimateConfigFile
@@ -174,6 +188,7 @@ onMounted(async () => {
         @back="backToList"
         @update:temperature="(temp) => selectedZone && setTemperature(selectedZone.entity_id, temp)"
         @update:hvac-mode="(mode) => selectedZone && setHvacMode(selectedZone.entity_id, mode)"
+        @update:fan-mode="(fanMode) => selectedZone && setFanMode(selectedZone.entity_id, fanMode)"
       />
     </Transition>
   </div>

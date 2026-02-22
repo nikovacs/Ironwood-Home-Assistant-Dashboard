@@ -3,7 +3,7 @@
  * Location is set via latitude + longitude in the YAML.
  * Open-Meteo is free, no API key, 10k requests/day (e.g. 15-min refresh = 96/day).
  */
-import { ref, onMounted, shallowRef, type Component } from 'vue'
+import { ref, onMounted, shallowRef, type Component, type Ref, type ShallowRef } from 'vue'
 import YAML from 'yaml'
 import IconSun from '../components/icons/IconSun.vue'
 import IconCloudSun from '../components/icons/IconCloudSun.vue'
@@ -80,8 +80,8 @@ const current = shallowRef<{
   uvIndex: number | null
   usAqi: number | null
 } | null>(null)
-const daily = shallowRef<Array<{ day: string; high: string; low: string; icon: Component }>>([])
-const details = shallowRef<Array<{ icon: Component; label: string; value: string }>>([])
+const daily = shallowRef<{ day: string; high: string; low: string; icon: Component }[]>([])
+const details = shallowRef<{ icon: Component; label: string; value: string }[]>([])
 
 let refreshTimeout: ReturnType<typeof setTimeout> | null = null
 
@@ -96,14 +96,14 @@ function parseNum(v: unknown): number | undefined {
 
 async function loadConfig(): Promise<WeatherConfig | null> {
   try {
-    const res = await fetch('/weather.yaml')
+    const res = await fetch(`${import.meta.env.BASE_URL}weather.yaml`)
     if (!res.ok) return null
     const text = await res.text()
     const data = YAML.parse(text) as Record<string, unknown>
-    const lat = parseNum(data?.latitude)
-    const lon = parseNum(data?.longitude)
-    if (lat == null || lon == null) return null
-    const yamlKey = typeof data?.openweathermap_api_key === 'string' ? data.openweathermap_api_key.trim() : undefined
+    const lat = parseNum(data.latitude)
+    const lon = parseNum(data.longitude)
+    if (!lat || !lon) return null
+    const yamlKey = typeof data.openweathermap_api_key === 'string' ? data.openweathermap_api_key.trim() : undefined
     const envKey = typeof import.meta.env.VITE_OPENWEATHERMAP_API_KEY === 'string'
       ? import.meta.env.VITE_OPENWEATHERMAP_API_KEY.trim()
       : undefined
@@ -111,7 +111,7 @@ async function loadConfig(): Promise<WeatherConfig | null> {
     return {
       latitude: lat,
       longitude: lon,
-      update_interval_minutes: typeof data?.update_interval_minutes === 'number'
+      update_interval_minutes: typeof data.update_interval_minutes === 'number'
         ? data.update_interval_minutes
         : 15,
       openweathermap_api_key: owmKey,
@@ -143,7 +143,7 @@ async function fetchForecast(lat: number, lon: number): Promise<ForecastResponse
 
 /** OpenWeatherMap Air Pollution API returns AQI 1–5. */
 interface OWMAirPollutionResponse {
-  list?: Array<{ main?: { aqi?: number } }>
+  list?: { main?: { aqi?: number } }[]
 }
 
 async function fetchOpenWeatherMapAqi(lat: number, lon: number, apiKey: string): Promise<number | null> {
@@ -157,7 +157,7 @@ async function fetchOpenWeatherMapAqi(lat: number, lon: number, apiKey: string):
     const res = await fetch(url)
     if (!res.ok) return null
     const data = (await res.json()) as OWMAirPollutionResponse
-    const aqi = data?.list?.[0]?.main?.aqi
+    const aqi = data.list?.[0]?.main?.aqi
     return typeof aqi === 'number' && aqi >= 1 && aqi <= 5 ? aqi : null
   } catch {
     return null
@@ -174,8 +174,8 @@ function owmAqiLabel(aqi: number): string {
 }
 
 function applyForecast(data: ForecastResponse, aqi: number | null = null): void {
-  const cur = data?.current
-  const d = data?.daily
+  const cur = data.current
+  const d = data.daily
   if (!cur) {
     current.value = null
     details.value = []
@@ -196,15 +196,15 @@ function applyForecast(data: ForecastResponse, aqi: number | null = null): void 
     usAqi: aqi ?? null,
   }
 
-  const uvVal = current.value.uvIndex != null && Number.isFinite(current.value.uvIndex)
+  const uvVal = current.value.uvIndex !== null && Number.isFinite(current.value.uvIndex)
     ? Math.round(current.value.uvIndex)
     : null
-  const uvLabel = uvVal != null ? (uvVal <= 2 ? 'Low' : uvVal <= 5 ? 'Mod' : 'High') : null
+  const uvLabel = uvVal !== null ? (uvVal <= 2 ? 'Low' : uvVal <= 5 ? 'Mod' : 'High') : null
   const precipMm = current.value.precip
-  const precipInches = precipMm != null && Number.isFinite(precipMm) ? precipMm / 25.4 : null
+  const precipInches = precipMm !== null && Number.isFinite(precipMm) ? precipMm / 25.4 : null
   
   let precipStr;
-  if (precipInches == null) {
+  if (precipInches === null) {
     precipStr = '—';
   } else if (precipInches === 0) {
     precipStr = '0';
@@ -216,17 +216,17 @@ function applyForecast(data: ForecastResponse, aqi: number | null = null): void 
     precipStr = rounded.toString();
   }
 
-  const aqiValue = aqi != null && Number.isFinite(aqi)
+  const aqiValue = aqi !== null && Number.isFinite(aqi)
     ? (aqi >= 1 && aqi <= 5 ? `${aqi} ${owmAqiLabel(aqi)}` : '—')
     : '—'
   details.value = [
-    { icon: IconUV, label: 'UV', value: uvVal != null && uvLabel != null ? `${uvVal} ${uvLabel}` : '—' },
+    { icon: IconUV, label: 'UV', value: uvVal !== null && uvLabel !== null ? `${uvVal} ${uvLabel}` : '—' },
     { icon: IconDroplet, label: 'Precip', value: precipStr === '—' ? '—' : `${precipStr} in` },
-    { icon: IconWind, label: 'Wind', value: current.value.windMph != null ? `${Math.round(current.value.windMph)} mph` : '—' },
+    { icon: IconWind, label: 'Wind', value: current.value.windMph !== null ? `${Math.round(current.value.windMph)} mph` : '—' },
     { icon: IconLeaf, label: 'AQI', value: aqiValue },
   ]
 
-  if (!d?.time?.length) {
+  if (!d?.time.length) {
     daily.value = []
     return
   }
@@ -248,8 +248,8 @@ function applyForecast(data: ForecastResponse, aqi: number | null = null): void 
     const low = d.temperature_2m_min[i]
     return {
       day: dayLabel,
-      high: high != null ? `${Math.round(high)}°` : '—',
-      low: low != null ? `${Math.round(low)}°` : '—',
+      high: Number.isFinite(high) ? `${Math.round(high)}°` : '—',
+      low: Number.isFinite(low) ? `${Math.round(low)}°` : '—',
       icon: dayIcon,
     }
   })
@@ -287,13 +287,29 @@ async function refresh(): Promise<void> {
   if (refreshTimeout) clearTimeout(refreshTimeout)
   refreshTimeout = setTimeout(() => {
     refreshTimeout = null
-    refresh()
+    void refresh()
   }, mins * 60 * 1000)
 }
 
-export function useWeather() {
+export function useWeather(): {
+  loading: Ref<boolean>
+  error: Ref<string | null>
+  current: ShallowRef<{
+    tempFormatted: string
+    condition: string
+    icon: Component
+    humidity: number | null
+    precip: number | null
+    windMph: number | null
+    uvIndex: number | null
+    usAqi: number | null
+  } | null>
+  details: ShallowRef<{ icon: Component; label: string; value: string }[]>
+  daily: ShallowRef<{ day: string; high: string; low: string; icon: Component }[]>
+  refresh: () => Promise<void>
+} {
   onMounted(() => {
-    refresh()
+    void refresh()
   })
 
   return {

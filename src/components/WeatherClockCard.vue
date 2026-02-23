@@ -147,6 +147,8 @@ const weatherDetails = computed(() => details.value.length > 0 ? details.value :
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  max-width: 20rem;
+  justify-self: center;
 }
 
 /* Calendar */

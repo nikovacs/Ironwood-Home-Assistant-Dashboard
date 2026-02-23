@@ -151,18 +151,18 @@ function blurAfterDelay(el: EventTarget | null): void {
             :mode="props.zone.mode"
             @update:model-value="emit('update:temperature', $event)"
           />
-          <!-- Target temp inside the arc: center by digits only, ° to the right -->
+          <!-- Target temp inside the arc: center by digits only, ° to the right. Padding keeps readout clear of the arc on medium screens. -->
           <div
-            class="climate-arc-center pointer-events-none absolute inset-0 flex items-center justify-center"
+            class="climate-arc-center pointer-events-none absolute inset-0 flex items-center justify-center p-[18%]"
             aria-hidden="true"
           >
             <span
-              class="relative inline-block text-8xl font-bold tabular-nums"
+              class="relative inline-block text-7xl font-bold tabular-nums md:text-8xl"
               :class="modeTargetTempClass[props.zone.mode] ?? 'text-text-muted'"
             >
               <template v-if="props.zone.targetTemp !== null">
                 <span>{{ props.zone.targetTemp }}</span>
-                <span class="absolute left-full top-0">°</span>
+                <span class="absolute left-full top-0 ml-0.5 text-[0.75em] leading-none">°</span>
               </template>
               <template v-else>—</template>
             </span>

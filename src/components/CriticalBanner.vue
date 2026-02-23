@@ -7,9 +7,7 @@ interface Props {
   message?: string
 }
 
-withDefaults(defineProps<Props>(), {
-  message: 'Smoke detector triggered',
-})
+defineProps<Props>()
 
 defineEmits<{
   dismiss: []
@@ -24,7 +22,7 @@ function handleDismiss(emit: (_e: 'dismiss') => void): void {
 </script>
 
 <template>
-  <Transition name="banner">
+  <Transition v-if="message" name="banner">
     <div
       v-if="visible"
       class="mx-5 mb-2 flex items-center gap-3 rounded-xl border border-cat-alarm bg-cat-alarm-soft px-4 py-3"

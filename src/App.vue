@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, shallowRef, computed, type Component } from 'vue'
+import { useHass } from './composables/useHass'
 import GreetingHeader from './components/GreetingHeader.vue'
 import CategoryButton from './components/CategoryButton.vue'
 import CriticalBanner from './components/CriticalBanner.vue'
@@ -32,18 +33,57 @@ interface Category {
 }
 
 const activeCategory = ref<string | null>(null)
-const isExpanded = computed<boolean>(() => activeCategory.value !== null)
-const showBottomCard = computed<boolean>(() => !isExpanded.value && categories.length <= 8)
+const { entities } = useHass()
 
-const categories: Category[] = [
+const CLIMATE_PREVIEW_STORAGE_KEY = 'ha-dashboard:climate-preview-entity'
+
+/** Resolve climate preview entity from URL (?climate_preview=...) then localStorage. Same build for all tablets. */
+function getInitialClimatePreviewEntityId(): string {
+  if (typeof window === 'undefined') return ''
+  const params = new URLSearchParams(window.location.search)
+  const fromUrl = params.get('climate_preview')?.trim()
+  if (fromUrl) {
+    try {
+      localStorage.setItem(CLIMATE_PREVIEW_STORAGE_KEY, fromUrl)
+    } catch {
+      /* ignore */
+    }
+    const url = new URL(window.location.href)
+    url.searchParams.delete('climate_preview')
+    window.history.replaceState({}, '', url.toString())
+    return fromUrl
+  }
+  try {
+    return localStorage.getItem(CLIMATE_PREVIEW_STORAGE_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+/** Entity ID for this tablet's zone (set via ?climate_preview=climate.room_name or stored in localStorage). */
+const climatePreviewEntityId = ref(getInitialClimatePreviewEntityId())
+
+const climatePreviewStatus = computed<string>(() => {
+  if (!climatePreviewEntityId.value) return ''
+  const entity = entities.value[climatePreviewEntityId.value]
+  const temp = entity?.attributes?.current_temperature
+  if (temp === null || temp === undefined || !Number.isFinite(Number(temp))) return '—'
+  const unit = (entity?.attributes?.temperature_unit as string) ?? '°F'
+  return `${Math.round(Number(temp))}${unit === '°C' ? '°C' : '°F'}`
+})
+
+const isExpanded = computed<boolean>(() => activeCategory.value !== null)
+
+const categories = computed<Category[]>(() => [
   { id: 'alerts',   icon: IconBell,        label: 'Alerts',   color: 'alerts',   status: '2 active' },
   { id: 'lighting', icon: IconLightbulb,   label: 'Lighting', color: 'lighting', status: '4/7 on' },
   { id: 'buttons',  icon: IconTap,         label: 'Buttons',  color: 'buttons',  status: '' },
   { id: 'audio',    icon: IconSpeaker,     label: 'Audio',    color: 'audio',    status: 'Playing' },
   { id: 'alarm',    icon: IconShield,      label: 'Alarm',    color: 'alarm',    status: 'Armed Home' },
   { id: 'cctv',     icon: IconCamera,      label: 'CCTV',     color: 'cctv',     status: '4/4 online' },
-  { id: 'climate',  icon: IconThermometer, label: 'Climate',  color: 'climate',  status: '72°F' },
-]
+  { id: 'climate',  icon: IconThermometer, label: 'Climate',  color: 'climate',  status: climatePreviewStatus.value },
+])
+const showBottomCard = computed<boolean>(() => !isExpanded.value && categories.value.length <= 8)
 
 function selectCategory(id: string): void {
   activeCategory.value = activeCategory.value === id ? null : id
@@ -70,10 +110,10 @@ interface Favorite {
 }
 
 const favorites = shallowRef<Favorite[]>([
-  { id: 'porch',  icon: IconLightbulb, label: 'Front Porch', active: true },
-  { id: 'lock',   icon: IconLock,      label: 'Lock Door',   active: false },
-  { id: 'garage', icon: IconCar,       label: 'Garage',      active: false },
-  { id: 'fan',    icon: IconFan,       label: 'Fan',         active: true },
+  // { id: 'porch',  icon: IconLightbulb, label: 'Front Porch', active: true },
+  // { id: 'lock',   icon: IconLock,      label: 'Lock Door',   active: false },
+  // { id: 'garage', icon: IconCar,       label: 'Garage',      active: false },
+  // { id: 'fan',    icon: IconFan,       label: 'Fan',         active: true },
 ])
 
 function toggleFavorite(fav: Favorite): void {
@@ -172,7 +212,10 @@ function onHandlePointerUp(e: PointerEvent): void {
 </script>
 
 <template>
-  <div class="flex min-h-dvh flex-col bg-surface-primary">
+  <div
+    class="app-root flex min-h-dvh flex-col bg-surface-primary"
+    :class="{ 'panel-expanded': isExpanded }"
+  >
     <GreetingHeader :hide-extras="showBottomCard" />
 
     <!-- Critical alert banner -->
@@ -348,12 +391,29 @@ function onHandlePointerUp(e: PointerEvent): void {
   transition: none;
 }
 
+/*
+  When the panel is open, lock the app root to the viewport height so the flex chain
+  (root → panel-area → panel-scroll → panel content) resolves correctly on real tablets.
+  Without this, only a sliver of the panel content can show (percentage/flex height bugs).
+*/
+.app-root.panel-expanded {
+  height: 100dvh;
+  overflow: hidden;
+}
+
 .panel-scroll {
   flex: 1 1 0px;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+}
+
+.panel-scroll > * {
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 /*

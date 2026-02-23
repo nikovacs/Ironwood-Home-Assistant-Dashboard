@@ -1,6 +1,8 @@
 <script setup lang="ts">
 /* global fetch */
-import { ref, computed, onMounted, shallowRef, type Component } from 'vue'
+import { ref, computed, onMounted, onUnmounted, shallowRef, type Component } from 'vue'
+import { Subject } from 'rxjs'
+import { groupBy, mergeMap, debounceTime } from 'rxjs/operators'
 import YAML from 'yaml'
 import { useHass } from '../../composables/useHass'
 import IconSofa from '../icons/IconSofa.vue'
@@ -43,23 +45,35 @@ const selectedZoneEntityId = ref<string | null>(null)
 const testEntityData = shallowRef<Record<string, TestEntity>>({})
 /** When using test data, local overrides so temp/mode/fan changes update the UI. */
 const testDataOverrides = ref<Record<string, { temperature?: number, hvac_mode?: string, fan_mode?: string }>>({})
+/** Optimistic overrides: applied immediately for display; HASS calls are debounced (5s). */
+const pendingOverrides = ref<Record<string, { temperature?: number, hvac_mode?: string, fan_mode?: string }>>({})
 
 const { entities, hassService } = useHass()
 
+/** Emits entityId when user changes temp/mode/fan; debounced per entity then flush to HASS. */
+const climateFlush$ = new Subject<string>()
+const flushSub = climateFlush$
+  .pipe(
+    groupBy((entityId) => entityId),
+    mergeMap((group) => group.pipe(debounceTime(5000)))
+  )
+  .subscribe((entityId) => flushEntity(entityId))
+
 const zones = computed(() => {
   const list = zonesConfig.value.slice(0, MAX_ZONES)
-  const overrides = testDataOverrides.value
+  const testOverrides = testDataOverrides.value
+  const pending = pendingOverrides.value
   return list.map((zc, i) => {
     const realEntity = entities.value[zc.entity_id] ?? null
     const testEntity = testEntityData.value[zc.entity_id] ?? null
     const entity = realEntity ?? testEntity
     const attrs = entity?.attributes ?? {}
-    const override = overrides[zc.entity_id]
+    const override = { ...testOverrides[zc.entity_id], ...pending[zc.entity_id] }
     const state = (override?.hvac_mode ?? entity?.state) ?? 'unavailable'
     const currentTemp = attrs.current_temperature ?? null
     const targetTemp = (override?.temperature !== undefined ? override.temperature : attrs.temperature) ?? null
     const hvacMode = (state === 'unavailable' ? 'off' : state) as 'heat' | 'cool' | 'off' | 'auto' | 'heat_cool' | 'dry' | 'fan_only'
-    const overrideFan = overrides[zc.entity_id]?.fan_mode
+    const overrideFan = override?.fan_mode
     const fanMode = (overrideFan ?? attrs.fan_mode ?? 'auto') as string
     const name = zc.name ?? attrs.friendly_name ?? zc.entity_id
     return {
@@ -98,6 +112,35 @@ function backToList(): void {
   selectedZoneEntityId.value = null
 }
 
+/** Apply optimistic update (UI immediately) and push to debounced flush stream. */
+function applyPending(entityId: string, patch: { temperature?: number, hvac_mode?: string, fan_mode?: string }): void {
+  pendingOverrides.value = {
+    ...pendingOverrides.value,
+    [entityId]: { ...pendingOverrides.value[entityId], ...patch },
+  }
+  climateFlush$.next(entityId)
+}
+
+function flushEntity(entityId: string): void {
+  const p = pendingOverrides.value[entityId]
+  if (!p) return
+  const hasRealEntity = entities.value[entityId] !== undefined
+  if (hasRealEntity) {
+    if (p.temperature !== undefined) {
+      hassService('climate', 'set_temperature', { entity_id: entityId, temperature: p.temperature })
+    }
+    if (p.hvac_mode !== undefined) {
+      hassService('climate', 'set_hvac_mode', { entity_id: entityId, hvac_mode: p.hvac_mode })
+    }
+    if (p.fan_mode !== undefined) {
+      hassService('climate', 'set_fan_mode', { entity_id: entityId, fan_mode: p.fan_mode })
+    }
+  }
+  const next = { ...pendingOverrides.value }
+  delete next[entityId]
+  pendingOverrides.value = next
+}
+
 function setHvacMode(entityId: string, hvacMode: string): void {
   if (testEntityData.value[entityId] !== undefined && entities.value[entityId] === undefined) {
     testDataOverrides.value = {
@@ -105,7 +148,7 @@ function setHvacMode(entityId: string, hvacMode: string): void {
       [entityId]: { ...testDataOverrides.value[entityId], hvac_mode: hvacMode },
     }
   }
-  hassService('climate', 'set_hvac_mode', { entity_id: entityId, hvac_mode: hvacMode })
+  applyPending(entityId, { hvac_mode: hvacMode })
 }
 
 function setTemperature(entityId: string, temperature: number): void {
@@ -115,7 +158,7 @@ function setTemperature(entityId: string, temperature: number): void {
       [entityId]: { ...testDataOverrides.value[entityId], temperature },
     }
   }
-  hassService('climate', 'set_temperature', { entity_id: entityId, temperature })
+  applyPending(entityId, { temperature })
 }
 
 function setFanMode(entityId: string, fanMode: string): void {
@@ -125,7 +168,7 @@ function setFanMode(entityId: string, fanMode: string): void {
       [entityId]: { ...testDataOverrides.value[entityId], fan_mode: fanMode },
     }
   }
-  hassService('climate', 'set_fan_mode', { entity_id: entityId, fan_mode: fanMode })
+  applyPending(entityId, { fan_mode: fanMode })
 }
 
 onMounted(async () => {
@@ -145,6 +188,11 @@ onMounted(async () => {
     zonesConfig.value = DUMMY_ZONES
     testEntityData.value = {}
   }
+})
+
+onUnmounted(() => {
+  flushSub.unsubscribe()
+  climateFlush$.complete()
 })
 </script>
 

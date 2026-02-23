@@ -49,6 +49,16 @@ entities:
 
 The **public/climate-zones.yaml** in this repo includes both `zones` and `entities` so it works as the example and as test data when running without HA.
 
+### Climate button preview (tablets per room)
+
+If you run the dashboard on tablets in different rooms, you can show that room’s current temperature on the main Climate button. Use **one build** for all tablets and set the zone at runtime:
+
+- **When no climate_preview is set:** The Climate button shows no status at all (no temperature, no placeholder). Set a preview only on tablets where you want the room temp on the button.
+- **URL (one-time setup):** Open the dashboard with a query param, e.g.  
+  `https://your-dashboard/?climate_preview=climate.living_room`  
+  The value is saved in the tablet’s **localStorage**; later visits (without the param) still show that room’s temp. To change the room, open the URL with a different `climate_preview` value again.
+- **No env var:** The climate preview entity is not read from `.env`, so the same build works everywhere; each tablet remembers its own zone (or shows nothing if never set).
+
 ### Offline / failed fetch
 
 If the config file cannot be loaded (e.g. wrong path), the panel uses **dummy zones** (Living Room, Bedroom, Office, Guest Room) so you can still test the UI. With `entities` in your config, those zones show the mock data and controls work locally; without it they show as “Unavailable” until HA is connected.

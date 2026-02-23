@@ -32,6 +32,11 @@ interface ClimateConfigFile {
 const MAX_ZONES = 4
 const zoneIcons: Component[] = [IconSofa, IconBed, IconMonitor, IconHome]
 
+function toFiniteNumber(value: unknown, fallback: number): number {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
+}
+
 /** Fallback zones when config fetch fails (e.g. offline); entities show as unavailable. */
 const DUMMY_ZONES: ZoneConfig[] = [
   { entity_id: 'climate.living_room', name: 'Living Room' },
@@ -87,9 +92,9 @@ const zones = computed(() => {
       available: entity !== null,
       hvac_modes: (attrs.hvac_modes as string[] | undefined) ?? ['heat', 'cool', 'off'],
       fan_modes: (attrs.fan_modes as string[] | undefined) ?? ['auto', 'on'],
-      min_temp: attrs.min_temp !== null ? Number(attrs.min_temp) : 50,
-      max_temp: attrs.max_temp !== null ? Number(attrs.max_temp) : 90,
-      temperature_step: attrs.target_temp_step !== null ? Number(attrs.target_temp_step) : 1,
+      min_temp: toFiniteNumber(attrs.min_temp, 50),
+      max_temp: toFiniteNumber(attrs.max_temp, 90),
+      temperature_step: toFiniteNumber(attrs.target_temp_step, 1),
     }
   })
 })

@@ -90,8 +90,15 @@ function stepDown(): void {
     return
   }
   lastStepAt.value = now
-  const t = props.zone.targetTemp ?? props.zone.min_temp
-  const next = Math.max(props.zone.min_temp, t - props.zone.temperature_step)
+  const minT = Number.isFinite(Number(props.zone.min_temp)) ? Number(props.zone.min_temp) : 50
+  const step = Number.isFinite(Number(props.zone.temperature_step)) ? Number(props.zone.temperature_step) : 1
+  const t =
+    props.zone.targetTemp !== null &&
+    props.zone.targetTemp !== undefined &&
+    Number.isFinite(Number(props.zone.targetTemp))
+      ? Number(props.zone.targetTemp)
+      : minT
+  const next = Math.max(minT, t - step)
   emit('update:temperature', next)
 }
 
@@ -101,8 +108,15 @@ function stepUp(): void {
     return
   }
   lastStepAt.value = now
-  const t = props.zone.targetTemp ?? props.zone.max_temp
-  const next = Math.min(props.zone.max_temp, t + props.zone.temperature_step)
+  const maxT = Number.isFinite(Number(props.zone.max_temp)) ? Number(props.zone.max_temp) : 90
+  const step = Number.isFinite(Number(props.zone.temperature_step)) ? Number(props.zone.temperature_step) : 1
+  const t =
+    props.zone.targetTemp !== null &&
+    props.zone.targetTemp !== undefined &&
+    Number.isFinite(Number(props.zone.targetTemp))
+    ? Number(props.zone.targetTemp)
+    : maxT
+  const next = Math.min(maxT, t + step)
   emit('update:temperature', next)
 }
 
@@ -128,7 +142,7 @@ function blurAfterDelay(el: EventTarget | null): void {
     </div>
 
     <div class="climate-detail-scroll flex min-h-0 flex-1 flex-col items-center overflow-x-hidden ">
-      <div class="climate-detail-readout flex shrink-0 justify-center text-center -mb-8 sm:-mb-0">
+      <div class="climate-detail-readout flex shrink-0 justify-center text-center -mb-4 sm:-mb-0">
         <div>
           <p class="text-sm text-text-muted uppercase tracking-wide pt-4 sm:pt-0">Current</p>
           <p class="relative inline-block text-3xl font-bold text-text-primary tabular-nums sm:text-4xl md:text-5xl">
@@ -171,7 +185,7 @@ function blurAfterDelay(el: EventTarget | null): void {
       </div>
 
       <!-- Fine-tune buttons directly below the arc (z-10 so they stay clickable when arc overlaps) -->
-      <div class="climate-arc-step-buttons relative z-10 -mt-8 flex shrink-0 items-center justify-center gap-4 sm:-mt-3">
+      <div class="climate-arc-step-buttons relative z-10 flex shrink-0 items-center justify-center gap-4">
         <button
           type="button"
           class="flex h-12 w-12 items-center justify-center rounded-full border-2 border-border-subtle bg-surface-card text-text-primary transition-colors hover:border-text-secondary hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:hover:border-border-subtle disabled:hover:bg-surface-card sm:h-14 sm:w-14"

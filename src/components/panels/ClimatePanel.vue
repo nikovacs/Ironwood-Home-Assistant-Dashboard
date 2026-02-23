@@ -238,6 +238,7 @@ onUnmounted(() => {
         key="detail"
         class="climate-view-root"
         :zone="selectedZone"
+        :has-pending-changes="!!(selectedZone && pendingOverrides[selectedZone.entity_id])"
         @back="backToList"
         @update:temperature="(temp) => selectedZone && setTemperature(selectedZone.entity_id, temp)"
         @update:hvac-mode="(mode) => selectedZone && setHvacMode(selectedZone.entity_id, mode)"

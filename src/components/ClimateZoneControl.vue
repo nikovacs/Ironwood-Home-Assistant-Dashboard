@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import IconChevronLeft from './icons/IconChevronLeft.vue'
 import ClimateTemperatureArc from './ClimateTemperatureArc.vue'
 
@@ -19,6 +19,8 @@ export interface ClimateZoneControlData {
 
 const props = defineProps<{
   zone: ClimateZoneControlData
+  /** True when this zone has unflushed changes (debounce not yet fired). */
+  hasPendingChanges?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -125,6 +127,38 @@ function blurAfterDelay(el: EventTarget | null): void {
     setTimeout(() => el.blur(), 120)
   }
 }
+
+const pillRef = ref<HTMLElement | null>(null)
+const pillWidth = ref<number | null>(null)
+const pendingMeasureRef = ref<HTMLElement | null>(null)
+const syncedMeasureRef = ref<HTMLElement | null>(null)
+const widthForPending = ref(0)
+const widthForSynced = ref(0)
+
+onMounted(() => {
+  nextTick(() => {
+    widthForPending.value = pendingMeasureRef.value?.offsetWidth ?? 0
+    widthForSynced.value = syncedMeasureRef.value?.offsetWidth ?? 0
+  })
+})
+
+watch(
+  () => props.hasPendingChanges,
+  async () => {
+    const pill = pillRef.value
+    if (!pill) return
+    const currentWidth = pill.offsetWidth
+    const newWidth = props.hasPendingChanges ? (widthForPending.value || currentWidth) : (widthForSynced.value || currentWidth)
+    if (newWidth > currentWidth) {
+      pillWidth.value = newWidth
+    } else {
+      pillWidth.value = currentWidth
+      await nextTick()
+      pillWidth.value = newWidth
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
@@ -138,7 +172,24 @@ function blurAfterDelay(el: EventTarget | null): void {
       >
         <IconChevronLeft class="h-7 w-7" />
       </button>
-      <h2 class="text-xl font-semibold text-text-primary truncate">{{ props.zone.name }}</h2>
+      <h2 class="min-w-0 flex-1 truncate text-xl font-semibold text-text-primary">{{ props.zone.name }}</h2>
+      <!-- Hidden elements to measure true width of each label (unconstrained so we never clip) -->
+      <div class="sync-pill-measure-wrap" aria-hidden="true">
+        <span ref="pendingMeasureRef" class="sync-pill-measure inline-flex items-center rounded-full border border-border-subtle bg-surface-card px-3 py-1 text-xs text-text-muted whitespace-nowrap">Changes pending</span>
+        <span ref="syncedMeasureRef" class="sync-pill-measure inline-flex items-center rounded-full border border-border-subtle bg-surface-card px-3 py-1 text-xs text-text-muted whitespace-nowrap">Synced</span>
+      </div>
+      <span
+        ref="pillRef"
+        class="sync-pill ml-auto shrink-0 inline-flex items-center justify-center overflow-hidden rounded-full px-3 py-1 text-xs text-text-muted bg-surface-card border border-border-subtle min-h-[1.5rem]"
+        :style="pillWidth !== null ? { width: `${pillWidth}px` } : undefined"
+        aria-live="polite"
+      >
+        <Transition name="sync-pill" mode="out-in">
+          <span :key="props.hasPendingChanges ? 'pending' : 'synced'" class="sync-pill-inner inline-block whitespace-nowrap">
+            {{ props.hasPendingChanges ? 'Changes pending' : 'Synced' }}
+          </span>
+        </Transition>
+      </span>
     </div>
 
     <div class="climate-detail-scroll flex min-h-0 flex-1 flex-col items-center overflow-x-hidden ">
@@ -279,5 +330,42 @@ function blurAfterDelay(el: EventTarget | null): void {
   height: 100% !important;
   min-width: 0;
   min-height: 0;
+}
+
+.sync-pill-measure-wrap {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  display: flex;
+  gap: 0;
+}
+
+.sync-pill {
+  transition: width 0.2s ease;
+}
+
+.sync-pill-inner {
+  white-space: nowrap;
+}
+
+.sync-pill-enter-active,
+.sync-pill-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.sync-pill-enter-from,
+.sync-pill-leave-to {
+  opacity: 0;
+  transform: translateY(-0.25rem);
+}
+
+.sync-pill-enter-to,
+.sync-pill-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>

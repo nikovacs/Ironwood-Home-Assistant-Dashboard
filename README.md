@@ -22,8 +22,10 @@ Place **climate-zones.yaml** in `public/`. It is the only file: zones and option
 zones:
   - entity_id: climate.living_room   # Your HA climate entity_id
     name: Living Room                 # Optional display name
+    icon: sofa                        # Optional: name of icon file without "Icon" prefix (e.g. down -> IconDown.vue)
   - entity_id: climate.bedroom
     name: Bedroom
+    icon: bed
   # ... up to 4 zones
 ```
 
@@ -46,6 +48,7 @@ entities:
 
 - **entity_id** (in zones) — Must match a climate entity in Home Assistant (e.g. from Venstar; check **Developer tools → States**).
 - **name** (in zones) — Optional; used as the zone label. If omitted, the entity’s friendly name is used.
+- **icon** (in zones) — Optional; name of the icon (matches filename without "Icon" prefix: `down` → IconDown.vue, `house` → IconHouse.vue). Any `Icon*.vue` in `components/icons/` can be used. If omitted, a default icon is used by position.
 
 The **public/climate-zones.yaml** in this repo includes both `zones` and `entities` so it works as the example and as test data when running without HA.
 

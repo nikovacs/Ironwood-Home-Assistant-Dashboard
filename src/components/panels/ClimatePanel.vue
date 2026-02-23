@@ -1,10 +1,10 @@
 <script setup lang="ts">
-/* global fetch */
 import { ref, computed, onMounted, onUnmounted, shallowRef, type Component } from 'vue'
 import { Subject } from 'rxjs'
 import { groupBy, mergeMap, debounceTime } from 'rxjs/operators'
 import YAML from 'yaml'
 import { useHass } from '../../composables/useHass'
+import { resolveIcon } from '../../composables/useIcons'
 import IconSofa from '../icons/IconSofa.vue'
 import IconBed from '../icons/IconBed.vue'
 import IconMonitor from '../icons/IconMonitor.vue'
@@ -15,6 +15,8 @@ import ClimateZoneControl from '../ClimateZoneControl.vue'
 interface ZoneConfig {
   entity_id: string
   name?: string
+  /** Icon key: name of the icon file without "Icon" prefix (e.g. down -> IconDown.vue). */
+  icon?: string
 }
 
 /** Entity shape in YAML: static config only (state/temps come from HA at runtime). */
@@ -81,10 +83,12 @@ const zones = computed(() => {
     const overrideFan = override?.fan_mode
     const fanMode = (overrideFan ?? attrs.fan_mode ?? 'auto') as string
     const name = zc.name ?? attrs.friendly_name ?? zc.entity_id
+    const iconKey = (zc.icon ?? '').trim().toLowerCase().replace(/\s+/g, '_')
+    const icon: Component = (iconKey ? resolveIcon(iconKey) : undefined) ?? zoneIcons[i] ?? IconHome
     return {
       entity_id: zc.entity_id,
       name,
-      icon: zoneIcons[i] ?? IconHome,
+      icon,
       currentTemp: currentTemp !== null ? Math.round(Number(currentTemp)) : null,
       targetTemp: targetTemp !== null ? Math.round(Number(targetTemp)) : null,
       mode: hvacMode,

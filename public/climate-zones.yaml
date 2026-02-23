@@ -1,17 +1,22 @@
 # Climate panel config: zones and optional test/example data (same file).
 # Zones: up to 4 climate entity_ids. Optional "name" overrides HA friendly name.
+# Optional "icon": name of icon file without "Icon" prefix (e.g. down -> IconDown.vue).
 # Entities: optional; use as example and as fallback when HA entity is missing (e.g. offline).
 # Entity IDs under "entities" should match your zone entity_ids.
 
 zones:
   - entity_id: climate.living_room
     name: Living Room
+    icon: sofa
   - entity_id: climate.bedroom
     name: Bedroom
+    icon: bed
   - entity_id: climate.office
     name: Office
+    icon: office
   - entity_id: climate.guest_room
     name: Guest Room
+    icon: home
 
 # Example/test data: static config only (hvac_modes, min/max temp, etc.). Omit when using real HA only.
 # state, current_temperature, and temperature come from Home Assistant at runtime.

@@ -20,9 +20,6 @@ import IconCamera from './components/icons/IconCamera.vue'
 import IconThermometer from './components/icons/IconThermometer.vue'
 import FavoriteButton from './components/FavoriteButton.vue'
 import WeatherClockCard from './components/WeatherClockCard.vue'
-import IconLock from './components/icons/IconLock.vue'
-import IconCar from './components/icons/IconCar.vue'
-import IconFan from './components/icons/IconFan.vue'
 
 interface Category {
   id: string
